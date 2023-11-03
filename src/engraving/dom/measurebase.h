@@ -108,12 +108,13 @@ public:
 
     const MeasureBase* findPotentialSectionBreak() const;
     LayoutBreak* sectionBreakElement() const;
+    LayoutBreak* findBreakElement(LayoutBreakType type) const;
 
-    void undoSetBreak(bool v, LayoutBreakType type);
+    void undoSetBreak(bool v, LayoutBreakType type, bool isRepeat = false);
     void undoSetLineBreak(bool v) { undoSetBreak(v, LayoutBreakType::LINE); }
     void undoSetPageBreak(bool v) { undoSetBreak(v, LayoutBreakType::PAGE); }
     void undoSetSectionBreak(bool v) { undoSetBreak(v, LayoutBreakType::SECTION); }
-    void undoSetNoBreak(bool v) { undoSetBreak(v, LayoutBreakType::NOBREAK); }
+    void undoSetNoBreak(bool v, bool isRepeat = false) { undoSetBreak(v, LayoutBreakType::NOBREAK, isRepeat); }
 
     void cleanupLayoutBreaks(bool undo);
 

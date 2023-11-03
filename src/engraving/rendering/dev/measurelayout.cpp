@@ -286,6 +286,9 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
         bool found = false;
         for (EngravingItem* ee : oldList) {
             if (ee->type() == e->type() && ee->subtype() == e->subtype()) {
+                if (e->excludeFromOtherParts() != ee->excludeFromOtherParts()) {
+                    ee->setExcludeFromOtherParts(e->excludeFromOtherParts());
+                }
                 mmrMeasure->add(ee);
                 auto i = std::find(oldList.begin(), oldList.end(), ee);
                 if (i != oldList.end()) {
@@ -296,7 +299,11 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
             }
         }
         if (!found) {
-            mmrMeasure->add(e->clone());
+            EngravingItem* clone = e->clone();
+            if (e->isLayoutBreak()) {
+                clone->setExcludeFromOtherParts(e->excludeFromOtherParts());
+            }
+            mmrMeasure->add(clone);
         }
     }
     for (EngravingItem* e : oldList) {

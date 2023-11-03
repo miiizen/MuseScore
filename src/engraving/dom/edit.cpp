@@ -5707,7 +5707,8 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
 
     if (et == ElementType::LAYOUT_BREAK) {
         LayoutBreak* lb = toLayoutBreak(element);
-        if (lb->layoutBreakType() == LayoutBreakType::SECTION) {
+        if (lb->layoutBreakType() == LayoutBreakType::SECTION
+            || (lb->layoutBreakType() == LayoutBreakType::NOBREAK && lb->isRepeatNoBreak())) {
             MeasureBase* m = lb->measure();
             for (Score* s : scoreList()) {
                 if (s == lb->score()) {

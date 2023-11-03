@@ -60,11 +60,13 @@ public:
     void setStartWithMeasureOne(bool v) { _startWithMeasureOne = v; }
     bool firstSystemIndentation() const { return _firstSystemIndentation; }
     void setFirstSystemIndentation(bool v) { _firstSystemIndentation = v; }
+    void setIsRepeatNoBreak(bool v) { _repeatNoBreak = v; }
 
     bool isPageBreak() const { return _layoutBreakType == LayoutBreakType::PAGE; }
     bool isLineBreak() const { return _layoutBreakType == LayoutBreakType::LINE; }
     bool isSectionBreak() const { return _layoutBreakType == LayoutBreakType::SECTION; }
     bool isNoBreak() const { return _layoutBreakType == LayoutBreakType::NOBREAK; }
+    bool isRepeatNoBreak() const { return _repeatNoBreak; }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -75,6 +77,9 @@ public:
     double lineWidth() const { return m_lw; }
     const RectF& iconBorderRect() const { return m_iconBorderRect; }
     const draw::PainterPath& iconPath() const { return m_iconPath; }
+
+    bool canBeExcludedFromOtherParts() const override { return true; }
+    void manageExclusionFromParts(bool exclude) override;
 
 protected:
     void added() override;
@@ -95,6 +100,7 @@ private:
     bool _startWithLongNames;
     bool _startWithMeasureOne;
     bool _firstSystemIndentation;
+    bool _repeatNoBreak;
     LayoutBreakType _layoutBreakType;
 };
 } // namespace mu::engraving

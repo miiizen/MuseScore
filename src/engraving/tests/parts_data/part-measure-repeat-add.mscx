@@ -155,6 +155,7 @@
       <Measure>
         <measureRepeatCount>1</measureRepeatCount>
         <LayoutBreak>
+          <linkedMain/>
           <subtype>nobreak</subtype>
           </LayoutBreak>
         <voice>
@@ -168,6 +169,7 @@
       <Measure>
         <measureRepeatCount>2</measureRepeatCount>
         <LayoutBreak>
+          <linkedMain/>
           <subtype>nobreak</subtype>
           </LayoutBreak>
         <voice>
@@ -182,6 +184,7 @@
       <Measure>
         <measureRepeatCount>3</measureRepeatCount>
         <LayoutBreak>
+          <linkedMain/>
           <subtype>nobreak</subtype>
           </LayoutBreak>
         <voice>
@@ -891,6 +894,14 @@
           </Measure>
         <Measure>
           <measureRepeatCount>1</measureRepeatCount>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-1</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <Rest>
               <linked>
@@ -902,6 +913,14 @@
           </Measure>
         <Measure>
           <measureRepeatCount>2</measureRepeatCount>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-1</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <MeasureRepeat>
               <subtype>4</subtype>
@@ -914,6 +933,14 @@
           </Measure>
         <Measure>
           <measureRepeatCount>3</measureRepeatCount>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-1</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <Rest>
               <linked>
@@ -1331,6 +1358,14 @@
             </voice>
           </Measure>
         <Measure>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-2</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <Rest>
               <linked>
@@ -1341,6 +1376,14 @@
             </voice>
           </Measure>
         <Measure>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-2</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <Rest>
               <linked>
@@ -1351,6 +1394,14 @@
             </voice>
           </Measure>
         <Measure>
+          <LayoutBreak>
+            <linked>
+              <location>
+                <staves>-2</staves>
+                </location>
+              </linked>
+            <subtype>nobreak</subtype>
+            </LayoutBreak>
           <voice>
             <Rest>
               <linked>

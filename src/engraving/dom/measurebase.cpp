@@ -471,8 +471,9 @@ PropertyValue MeasureBase::propertyDefault(Pid propertyId) const
 //   undoSetBreak
 //---------------------------------------------------------
 
-void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
+void MeasureBase::undoSetBreak(bool v, LayoutBreakType type, bool isRepeat)
 {
+    bool excludeFromParts = true;
     switch (type) {
     case LayoutBreakType::LINE:
         if (lineBreak() == v) {
@@ -496,6 +497,7 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
         if (v && lineBreak()) {
             setLineBreak(false);
         }
+        excludeFromParts = false;
         setSectionBreak(v);
         break;
     case LayoutBreakType::NOBREAK:
@@ -507,6 +509,9 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
             setPageBreak(false);
             setSectionBreak(false);
         }
+        if (isRepeat) {
+            excludeFromParts = false;
+        }
         setNoBreak(v);
         break;
     }
@@ -517,6 +522,8 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
         lb->setLayoutBreakType(type);
         lb->setTrack(mu::nidx);           // this are system elements
         lb->setParent(mb);
+        lb->setExcludeFromOtherParts(excludeFromParts);
+        lb->setIsRepeatNoBreak(isRepeat);
         score()->undoAddElement(lb);
     }
     cleanupLayoutBreaks(true);
@@ -648,9 +655,14 @@ int MeasureBase::measureIndex() const
 
 LayoutBreak* MeasureBase::sectionBreakElement() const
 {
-    if (sectionBreak()) {
+    return findBreakElement(LayoutBreakType::SECTION);
+}
+
+LayoutBreak* MeasureBase::findBreakElement(LayoutBreakType type) const
+{
+    if (lineBreak() || pageBreak() || sectionBreak() || noBreak()) {
         for (EngravingItem* e : el()) {
-            if (e->isLayoutBreak() && toLayoutBreak(e)->isSectionBreak()) {
+            if (e->isLayoutBreak() && toLayoutBreak(e)->layoutBreakType() == type) {
                 return toLayoutBreak(e);
             }
         }

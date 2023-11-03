@@ -23,8 +23,11 @@
 #include "log.h"
 
 #include "layoutbreak.h"
+#include "masterscore.h"
 #include "measurebase.h"
+#include "mmrest.h"
 #include "score.h"
+#include "undo.h"
 
 using namespace mu;
 using namespace mu::draw;
@@ -51,6 +54,7 @@ LayoutBreak::LayoutBreak(MeasureBase* parent)
     _startWithMeasureOne = false;
     _firstSystemIndentation = false;
     _layoutBreakType = LayoutBreakType(propertyDefault(Pid::LAYOUT_BREAK).toInt());
+    _repeatNoBreak = false;
 
     initElementStyle(&sectionBreakStyle);
 
@@ -58,6 +62,7 @@ LayoutBreak::LayoutBreak(MeasureBase* parent)
     resetProperty(Pid::START_WITH_LONG_NAMES);
     resetProperty(Pid::START_WITH_MEASURE_ONE);
     resetProperty(Pid::FIRST_SYSTEM_INDENTATION);
+    setExcludeFromOtherParts(propertyDefault(Pid::EXCLUDE_FROM_OTHER_PARTS).toBool());
     m_lw = spatium() * 0.3;
 }
 
@@ -149,6 +154,26 @@ void LayoutBreak::init()
     setbbox(m_iconBorderRect.adjusted(-m_lw, -m_lw, m_lw, m_lw));
 }
 
+void LayoutBreak::manageExclusionFromParts(bool exclude)
+{
+    if (exclude) {
+        EngravingItem::manageExclusionFromParts(exclude);
+    } else {
+        MeasureBase* mb = toMeasureBase(parent());
+        for (Score* score : masterScore()->scoreList()) {
+            if (score == this->score()) {
+                continue;
+            } else {
+                EngravingItem* e = linkedClone();
+                e->setScore(score);
+                Measure* nm = score->tick2measure(mb->tick());
+                e->setParent(nm);
+                score->undo(new AddElement(e));
+            }
+        }
+    }
+}
+
 //---------------------------------------------------------
 //   setLayoutBreakType
 //---------------------------------------------------------
@@ -235,6 +260,16 @@ bool LayoutBreak::setProperty(Pid propertyId, const PropertyValue& v)
     case Pid::FIRST_SYSTEM_INDENTATION:
         setFirstSystemIndentation(v.toBool());
         break;
+    case Pid::EXCLUDE_FROM_OTHER_PARTS:
+        if (measure() && toMeasure(measure())->isMMRest()) {
+            Measure* lastMeasure  = toMeasure(measure())->mmRestLast();
+            LayoutBreak* lb = lastMeasure->findBreakElement(_layoutBreakType);
+            if (lb) {
+                lb->setExcludeFromOtherParts(v.toBool());
+            }
+        }
+        EngravingItem::setProperty(Pid::EXCLUDE_FROM_OTHER_PARTS, v);
+        break;
     default:
         if (!EngravingItem::setProperty(propertyId, v)) {
             return false;
@@ -262,6 +297,11 @@ PropertyValue LayoutBreak::propertyDefault(Pid id) const
     case Pid::START_WITH_MEASURE_ONE:
         return true;
     case Pid::FIRST_SYSTEM_INDENTATION:
+        return true;
+    case Pid::EXCLUDE_FROM_OTHER_PARTS:
+        if (_layoutBreakType == LayoutBreakType::SECTION || (_layoutBreakType == LayoutBreakType::NOBREAK && isRepeatNoBreak())) {
+            return false;
+        }
         return true;
     default:
         return EngravingItem::propertyDefault(id);

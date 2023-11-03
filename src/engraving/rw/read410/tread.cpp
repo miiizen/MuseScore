@@ -2961,8 +2961,10 @@ void TRead::read(Hook* h, XmlReader& xml, ReadContext& ctx)
 
 void TRead::read(LayoutBreak* b, XmlReader& e, ReadContext& ctx)
 {
+    bool readExclude = false;
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
+        readExclude = readExclude || tag == "excludeFromParts";
         if (tag == "subtype") {
             TRead::readProperty(b, e, ctx, Pid::LAYOUT_BREAK);
         } else if (tag == "pause") {
@@ -2977,6 +2979,15 @@ void TRead::read(LayoutBreak* b, XmlReader& e, ReadContext& ctx)
         } else if (!readItemProperties(b, e, ctx)) {
             e.unknown();
         }
+    }
+    staff_idx_t staffIdx = ctx.track() / VOICES;
+    if (b->isNoBreak() && toMeasure(b->parent())->isMeasureRepeatGroup(staffIdx)) {
+        b->setIsRepeatNoBreak(true);
+    }
+
+    if (!readExclude) {
+        b->setProperty(Pid::EXCLUDE_FROM_OTHER_PARTS, b->propertyDefault(Pid::EXCLUDE_FROM_OTHER_PARTS));
+        b->setPropertyFlags(Pid::EXCLUDE_FROM_OTHER_PARTS, PropertyFlags::STYLED);
     }
     b->init();
 }

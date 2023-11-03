@@ -977,11 +977,8 @@ static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* osc
     nmb->setExcludeFromOtherParts(false);
 
     for (EngravingItem* e : mb->el()) {
-        if (e->isLayoutBreak()) {
-            LayoutBreakType st = toLayoutBreak(e)->layoutBreakType();
-            if (st == LayoutBreakType::PAGE || st == LayoutBreakType::LINE) {
-                continue;
-            }
+        if (e->isLayoutBreak() && e->excludeFromOtherParts()) {
+            continue;
         }
         track_idx_t track = mu::nidx;
         if (e->track() != mu::nidx) {

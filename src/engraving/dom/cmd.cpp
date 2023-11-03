@@ -3331,7 +3331,7 @@ bool Score::makeMeasureRepeatGroup(Measure* firstMeasure, int numMeasures, staff
             m->undoChangeProperty(Pid::REPEAT_START, false);
         }
         if (m != measures.back()) {
-            m->undoSetNoBreak(true);
+            m->undoSetNoBreak(true, true);
             Segment* seg = m->findSegmentR(SegmentType::EndBarLine, m->ticks());
             BarLine* endBarLine = toBarLine(seg->element(staff2track(staffIdx)));
             deleteItem(endBarLine); // also takes care of Pid::REPEAT_END
