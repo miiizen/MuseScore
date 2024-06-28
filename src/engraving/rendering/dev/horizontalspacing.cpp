@@ -385,6 +385,14 @@ void HorizontalSpacing::computeNotePadding(const Note* note, const EngravingItem
         }
     }
 
+    for (Articulation* a : note->chord()->articulations()) {
+        if (a->isLaissezVib()) {
+            const double paddingRight = 0.25;
+            const double paddingLeft = 0.15;
+            padding = std::max(padding, a->symWidth(a->symId()) + (paddingLeft + paddingRight) * note->spatium());
+        }
+    }
+
     padding *= scaling;
 
     if (!(item2->isNote() || item2->isRest())) {
