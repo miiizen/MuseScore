@@ -1084,6 +1084,21 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
         }
         if (!a->layoutCloseToNote()) {
             TLayout::layoutItem(a, ctx);
+            if (a->isLaissezVib()) {
+                const Articulation::LayoutData* ldata = a->ldata();
+                const double sp = a->spatium();
+                const Note* note = ldata->up() ? item->upNote() : item->downNote();
+                const int upDir = ldata->up() ? -1 : 1;
+                const int onLineDir = !(note->line() & 1) ? -1 : 1;
+
+                PointF result = note->pos() + item->pos();
+                const double noteheadToLvDist = 0.15 * sp;
+                const double lvYOffset = 0.2 * sp;
+                result.rx() += note->width() + noteheadToLvDist - ldata->bbox().left();
+                result.ry() += upDir * (note->height() / 2 + lvYOffset * onLineDir);
+                a->setPos(result);
+                continue;
+            }
             if (a->up()) {
                 a->setPos(!item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffTopY + kearnHeight - yOffset);
                 if (a->visible()) {
