@@ -249,7 +249,7 @@ void AccidentalsLayout::createChordsShape(AccidentalsLayoutContext& ctx)
     ctx.chordsShape.clear();
 
     for (const Chord* chord : ctx.chords) {
-        PointF chordPos = chord->isTrillCueNote() ? PointF() : chord->pos();
+        PointF chordPos = keepAccidentalsCloseToChord(chord) ? PointF() : chord->pos();
         const LedgerLine* ledger = chord->ledgerLines();
         while (ledger) {
             ctx.chordsShape.add(ledger->shape().translate(ledger->pos() + chordPos));
@@ -1081,7 +1081,7 @@ void AccidentalsLayout::setXposRelativeToSegment(Accidental* accidental, double 
     if (note) {
         x -= note->pos().x();
     }
-    if (chord && !chord->isTrillCueNote()) {
+    if (chord && !keepAccidentalsCloseToChord(chord)) {
         x -= chord->pos().x();
     }
     accidental->mutldata()->setPosX(x);
@@ -1113,6 +1113,11 @@ void AccidentalsLayout::sortTopDown(std::vector<Accidental*>& accidentals)
         }
         return line1 < line2;
     });
+}
+
+bool AccidentalsLayout::keepAccidentalsCloseToChord(const Chord* chord)
+{
+    return chord->isTrillCueNote() || chord->isGraceAfter();
 }
 
 double AccidentalsLayout::verticalPadding(const Accidental* acc1, const Accidental* acc2, const AccidentalsLayoutContext& ctx)
