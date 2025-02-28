@@ -2847,14 +2847,20 @@ bool Segment::goesBefore(const Segment* nextSegment) const
     }
 
     if (thisIsClef && (nextIsKeySig || nextIsTimeSig)
-        && rtick() == Fraction(0, 1) && nextSegment->rtick() == Fraction(0, 1) && !nextIsHeader) {
+        && rtick()
+        == Fraction(0,
+                    1) && nextSegment->rtick() == Fraction(0, 1) && !nextIsHeader && thisMeasureIsStartRepeat && prevMeasureIsEndRepeat) {
         // Between repeats
+        LOGI() << "1. BETWEEN REPEATS";
         return true;
     }
 
     if ((thisIsKeySig || thisIsTimeSig) && nextIsClef
-        && rtick() == Fraction(0, 1) && nextSegment->rtick() == Fraction(0, 1) && !thisIsHeader) {
+        && rtick()
+        == Fraction(0,
+                    1) && nextSegment->rtick() == Fraction(0, 1) && !thisIsHeader && thisMeasureIsStartRepeat && prevMeasureIsEndRepeat) {
         // Between repeats
+        LOGI() << "2. BETWEEN REPEATS";
         return false;
     }
 
