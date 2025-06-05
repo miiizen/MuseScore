@@ -603,6 +603,7 @@ Color EngravingItem::curColor(bool isVisible) const
 
 Color EngravingItem::curColor(bool isVisible, Color normalColor) const
 {
+    return Color::GREEN;
     // the default element color is always interpreted as black in printing
     if (score() && score()->printing()) {
         return (normalColor == configuration()->defaultColor()) ? Color::BLACK : normalColor;
