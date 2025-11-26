@@ -154,6 +154,7 @@ static DiagramInfo resolveDiagram(const std::vector<DiagramInfo>& diagrams)
             result = diagrams[i];
         }
     }
+    LOGI() << "Choose " << result.harmonyName;
 
     return result;
 }
