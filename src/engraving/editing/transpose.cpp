@@ -629,6 +629,7 @@ void Transpose::transposeFretDiagram(FretDiagram* diagram, Score* score, Interva
         }
     }
     harmony->setXmlText(harmony->harmonyName());
+    LOGI() << "harmony: " << harmony->plainText();
 
     std::vector<DiagramInfo> availableDiagrams = diagram->patternsFromHarmony(harmony->plainText());
     if (availableDiagrams.empty()) {

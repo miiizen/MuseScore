@@ -151,10 +151,13 @@ static DiagramInfo resolveDiagram(const std::vector<DiagramInfo>& diagrams)
     DiagramInfo result = diagrams.front();
     for (size_t i = 1; i < diagrams.size(); ++i) {
         if (!isSimpler(result, diagrams[i])) {
+            LOGI() << "1. " << diagrams[i].harmonyName << " is simpler than " << result.harmonyName;
             result = diagrams[i];
+        } else {
+            LOGI() << "2. " << result.harmonyName << " is simpler than " << diagrams[i].harmonyName;
         }
     }
-    LOGI() << "Choose " << result.harmonyName;
+    LOGI() << "Choose " << result.harmonyName << " from set of " << diagrams.size();
 
     return result;
 }
@@ -239,6 +242,7 @@ Segment* FretDiagram::segment() const
 
 void FretDiagram::updateDiagram(const String& harmonyName)
 {
+    LOGI() << "==> updateDiagram: " << harmonyName;
     std::vector<DiagramInfo> availableDiagrams = patternsFromHarmony(harmonyName);
     if (availableDiagrams.empty()) {
         return;
