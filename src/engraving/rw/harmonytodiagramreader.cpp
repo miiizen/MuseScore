@@ -57,6 +57,20 @@ std::unordered_map<muse::String, HarmonyToDiagramReader::FretDiagramInfo> Harmon
                 }
 
                 if (!harmony.isEmpty() && !diagram.isEmpty()) {
+                    if (harmony == u"ab") {
+                        String key1 = harmony;
+                        String key2 = harmony;
+
+                        auto h1 = std::hash<String> {}(key1);
+                        auto h2 = std::hash<String> {}(key2);
+
+                        std::cout << "Harmony: " << key1.toStdString()
+                                  << "  equal=" << (key1 == key2)
+                                  << "  hash1=" << h1
+                                  << "  hash2=" << h2
+                                  << "  hashes_equal=" << (h1 == h2)
+                                  << "\n";
+                    }
                     result.insert({ std::move(harmony), { std::move(diagram), std::move(pattern) } });
                 }
             } else {

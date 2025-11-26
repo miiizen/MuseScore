@@ -1426,6 +1426,13 @@ String String::number(double n, int prec)
     return fromAscii(cs, correctedIdx + 1);
 }
 
+// size_t String::hash() const
+// {
+//     const std::u16string& s = constStr();
+//     return std::hash<std::u16string_view> {}(
+//         std::u16string_view{ s.data(), s.size() });
+// }
+
 float String::toFloat(bool* ok) const
 {
     return static_cast<float>(toDouble(ok));

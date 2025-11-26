@@ -1461,6 +1461,8 @@ void FretDiagram::readHarmonyToDiagramFile(const muse::io::path_t& filePath) con
     std::unordered_map<String, rw::HarmonyToDiagramReader::FretDiagramInfo> harmonyToDiagramMap
         = rw::HarmonyToDiagramReader::read(reader);
 
+    LOGI() << "Abs: " << harmonyToDiagramMap.count(u"ab");
+
     const ChordList* chordList = score()->chordList();
     const NoteSpellingType spellingType = NoteSpellingType::STANDARD;
 
