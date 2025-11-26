@@ -367,8 +367,8 @@ public:
     static String number(size_t n);
     static String number(double n, int prec = 6);
 
-    // size_t hash() const;
-    inline size_t hash() const { return std::hash<std::u16string> {}(constStr()); }
+    size_t hash() const;
+    // inline size_t hash() const { return std::hash<std::u16string> {}(constStr()); }
 
 private:
     struct Mutator;

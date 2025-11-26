@@ -132,7 +132,9 @@ static HarmonyMapKey createHarmonyMapKey(const String& harmony, const NoteSpelli
 
     int keys = chord.keys();
 
-    LOGI() << "keys: " << keys << " root: " << rootTpc << " bassTpc: " << bassTpc;
+    if (harmony == u"ab") {
+        LOGI() << "keys: " << keys << " root: " << rootTpc << " bassTpc: " << bassTpc;
+    }
 
     return HarmonyMapKey(keys, rootTpc, bassTpc);
 }
