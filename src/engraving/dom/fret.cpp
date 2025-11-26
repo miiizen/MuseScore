@@ -132,6 +132,8 @@ static HarmonyMapKey createHarmonyMapKey(const String& harmony, const NoteSpelli
 
     int keys = chord.keys();
 
+    LOGI() << "keys: " << keys << " root: " << rootTpc << " bassTpc: " << bassTpc;
+
     return HarmonyMapKey(keys, rootTpc, bassTpc);
 }
 
@@ -242,12 +244,15 @@ void FretDiagram::updateDiagram(const String& harmonyName)
     if (availableDiagrams.empty()) {
         return;
     }
+    LOGI() << "available: " << availableDiagrams.size() << " " << harmonyName;
 
     String diagramXml = resolveDiagram(availableDiagrams).diagramXml;
 
     if (diagramXml.empty()) {
         return;
     }
+
+    LOGI() << diagramXml.toStdString();
 
     clear();
 
@@ -308,8 +313,10 @@ std::vector<LineF> FretDiagram::dragAnchorLines() const
 
 void FretDiagram::setStrings(int n)
 {
+    LOGI() << "==> setStrings " << n;
     int difference = n - m_strings;
     if (difference == 0 || n <= 0) {
+        LOGI() << "difference: " << difference;
         return;
     }
 
@@ -338,14 +345,18 @@ void FretDiagram::setStrings(int n)
     m_markers = tempMarkers;
 
     for (int fret = 1; fret <= m_frets; ++fret) {
+        LOGI() << "f: " << fret << " barre: " << barre(fret).exists();
         if (barre(fret).exists()) {
             if (m_barres[fret].startString + difference <= 0) {
+                LOGI() << "remove barre";
                 removeBarre(fret);
                 continue;
             }
 
             m_barres[fret].startString = std::max(0, m_barres[fret].startString + difference);
+            LOGI() << "end cur: " << m_barres[fret].endString << " difference: " << difference;
             m_barres[fret].endString   = m_barres[fret].endString == -1 ? -1 : m_barres[fret].endString + difference;
+            LOGI() << "SET END: " << m_barres[fret].endString;
         }
     }
 
@@ -455,9 +466,11 @@ void FretDiagram::setMarker(int string, FretMarkerType mtype)
 
 void FretDiagram::setBarre(int startString, int endString, int fret)
 {
+    LOGI() << "==> setBarre " << this;
     if (startString == -1) {
         removeBarre(fret);
     } else if (startString >= 0 && endString >= -1 && startString < m_strings && endString < m_strings) {
+        LOGI() << "Create barre: " << startString << " -> " << endString;
         m_barres[fret] = FretItem::Barre(startString, endString);
     }
 }
@@ -474,13 +487,17 @@ void FretDiagram::setBarre(int string, int fret, bool add /*= false*/)
 {
     UNUSED(add);
 
+    LOGI() << "==> setBarre";
+
     FretItem::Barre b = barre(fret);
     if (!b.exists()) {
         if (string < m_strings - 1) {
+            LOGI() << "Create barre: " << string << " -> " << -1;
             m_barres[fret] = FretItem::Barre(string, -1);
             removeDotsMarkers(string, -1, fret);
         }
     } else if (b.endString == -1 && b.startString < string) {
+        LOGI() << "SET END " << string;
         m_barres[fret].endString = string;
     } else {
         removeDotsMarkers(b.startString, b.endString, fret);

@@ -1463,6 +1463,7 @@ void TWrite::write(const FretDiagram* item, XmlWriter& xml, WriteContext& ctx)
             if (!b.exists()) {
                 continue;
             }
+            LOGI() << "barre: " << fi << " start: " << b.startString << " end: " << b.endString << " fd: " << item;
 
             xml.tag("barre", { { "start", b.startString }, { "end", b.endString } }, fi);
         }
