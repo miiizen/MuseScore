@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "harmonytodiagramreader.h"
+#include "thirdparty/kors_logger/src/log_base.h"
 
 using namespace mu::engraving::rw;
 
@@ -57,6 +58,11 @@ std::unordered_map<muse::String, HarmonyToDiagramReader::FretDiagramInfo> Harmon
                 }
 
                 if (!harmony.isEmpty() && !diagram.isEmpty()) {
+                    if (harmony == u"ab") {
+                        LOGI() << "Ab: ";
+                        LOGI() << "pattern: " << pattern;
+                        LOGI() << "diagram: " << diagram;
+                    }
                     result.insert({ std::move(harmony), { std::move(diagram), std::move(pattern) } });
                 }
             } else {
