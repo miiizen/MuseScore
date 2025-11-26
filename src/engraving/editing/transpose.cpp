@@ -616,6 +616,8 @@ void Transpose::transposeFretDiagram(FretDiagram* diagram, Score* score, Interva
 
     Interval kv = harmony->staff()->transpose(harmony->tick());
     Interval iv = harmony->part()->instrument(harmony->tick())->transpose();
+    LOGI() << "interval d: " << (interval.diatonic - kv.diatonic + iv.diatonic) << " c: " <<
+        (interval.chromatic - kv.chromatic + iv.chromatic);
     Interval hInterval((interval.diatonic - kv.diatonic + iv.diatonic), (interval.chromatic - kv.chromatic + iv.chromatic));
 
     Key key = !harmony->staff() ? Key::C : harmony->staff()->key(tick);
@@ -624,6 +626,8 @@ void Transpose::transposeFretDiagram(FretDiagram* diagram, Score* score, Interva
             info->setRootTpc(Transpose::transposeTpcDiatonicByKey(info->rootTpc(), transposeInterval, key, trKeys, useDoubleSharpsFlats));
             info->setBassTpc(Transpose::transposeTpcDiatonicByKey(info->bassTpc(), transposeInterval, key, trKeys, useDoubleSharpsFlats));
         } else {
+            LOGI() << "root: " << info->rootTpc() << " hInterval: " << hInterval.diatonic << ", " << hInterval.chromatic << " double: " <<
+                useDoubleSharpsFlats;
             info->setRootTpc(Transpose::transposeTpc(info->rootTpc(), hInterval, useDoubleSharpsFlats));
             info->setBassTpc(Transpose::transposeTpc(info->bassTpc(), hInterval, useDoubleSharpsFlats));
         }
