@@ -601,6 +601,10 @@ void Transpose::transposeFretDiagram(FretDiagram* diagram, Score* score, Interva
 
     String name = names.front();
 
+    LOGI() << "name: " << name << " names size: " << names.size();
+    for (auto& n : names) {
+        LOGI() << "name: " << n;
+    }
     diagram->setHarmony(name);
     harmony = diagram->harmony();
     IF_ASSERT_FAILED(harmony) {
