@@ -23,14 +23,13 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 
 namespace mu::engraving {
 struct OrnamentInterval;
 
 struct Interval {
-    int8_t diatonic = 0;
-    int8_t chromatic = 0;
+    int diatonic = 0;
+    int chromatic = 0;
 
     Interval() = default;
     Interval(int diatonic, int chromatic);
