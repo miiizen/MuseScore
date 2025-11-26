@@ -37,7 +37,7 @@ static constexpr int MIN_PITCH     = 0;
 static constexpr int MAX_PITCH     = 127;
 
 // a list of tpc's, with legal ranges, not really an enum, so no way to convert into a class
-enum Tpc : signed char {
+enum Tpc : int {
     TPC_INVALID = -9,
     TPC_F_BBB, TPC_C_BBB, TPC_G_BBB, TPC_D_BBB, TPC_A_BBB, TPC_E_BBB, TPC_B_BBB,
     TPC_F_BB,  TPC_C_BB,  TPC_G_BB,  TPC_D_BB,  TPC_A_BB,  TPC_E_BB,  TPC_B_BB,
