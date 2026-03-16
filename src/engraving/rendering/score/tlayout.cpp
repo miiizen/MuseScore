@@ -260,7 +260,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
         layoutExpression(item_cast<const Expression*>(item), static_cast<Expression::LayoutData*>(ldata));
         break;
     case ElementType::FERMATA:
-        layoutFermata(item_cast<const Fermata*>(item), static_cast<Fermata::LayoutData*>(ldata));
+        layoutFermata(item_cast<const Fermata*>(item), static_cast<Fermata::LayoutData*>(ldata), ctx);
         break;
     case ElementType::FIGURED_BASS:
         layoutFiguredBass(item_cast<const FiguredBass*>(item), static_cast<FiguredBass::LayoutData*>(ldata), ctx);
@@ -1136,7 +1136,7 @@ void TLayout::layoutBarLine(const BarLine* item, BarLine::LayoutData* ldata, con
     }
 
     if (Fermata* fermata = toFermata(item->segment()->findAnnotation(ElementType::FERMATA, item->track(), item->track() + VOICES))) {
-        layoutFermata(fermata, fermata->mutldata());
+        layoutFermata(fermata, fermata->mutldata(), ctx);
     }
 }
 
@@ -1880,7 +1880,7 @@ void TLayout::layoutExpression(const Expression* item, Expression::LayoutData* l
     Autoplace::autoplaceSegmentElement(item, ldata);
 }
 
-void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata)
+void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
     const StaffType* stType = item->staffType();
@@ -1890,10 +1890,6 @@ void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata)
     }
     ldata->setIsSkipDraw(false);
     ldata->setPos(PointF());
-
-    if (item->isStyled(Pid::OFFSET)) {
-        const_cast<Fermata*>(item)->setOffset(item->propertyDefault(Pid::OFFSET).value<PointF>());
-    }
 
     double x = 0.0;
     double y = item->placeAbove() ? 0.0 : item->staff()->staffHeight(item->tick());
@@ -1931,23 +1927,13 @@ void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata)
     ldata->setShape(Shape(item->symBbox(item->symId()), item));
     x -= 0.5 * ldata->bbox().width();
 
-    if (item->isStyled(Pid::OFFSET)) {
-        y += item->offset().y();
-    }
-    Shape staffShape = item->segment()->staffShape(item->staffIdx());
-    staffShape.removeTypes({ ElementType::FERMATA });
-    if (item->placeAbove()) {
-        double minDist = ldata->shape().minVerticalDistance(staffShape) + item->absoluteFromSpatium(item->minDistance());
-        y = std::min(y, -minDist);
-    } else {
-        double minDist = staffShape.minVerticalDistance(ldata->shape()) + item->absoluteFromSpatium(item->minDistance());
-        y = std::max(y, minDist);
-    }
-    if (item->isStyled(Pid::OFFSET)) {
-        y -= item->offset().y();
-    }
-
     ldata->setPos(x, y);
+
+    Sid styleId = item->placeAbove() ? Sid::fermataPosAbove : Sid::fermataPosBelow;
+    PointF offsetPos = ctx.conf().style().value(styleId).value<PointF>();
+    offsetPos *= item->spatium();
+
+    ldata->move(offsetPos);
 
     if (item->autoplace()) {
         const Segment* s2 = item->segment();
