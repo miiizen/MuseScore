@@ -44,7 +44,6 @@ static const ElementStyle tempoStyle {
     { Sid::tempoChangeLineSpacing, Pid::TEXT_LINE_SPACING },
 
     { Sid::tempoChangeColor, Pid::COLOR },
-    { Sid::tempoChangePosAbove, Pid::OFFSET },
 
     { Sid::tempoChangeFontFace, Pid::BEGIN_FONT_FACE },
     { Sid::tempoChangeFontFace, Pid::CONTINUE_FONT_FACE },
@@ -84,7 +83,6 @@ static const ElementStyle tempoStyle {
 };
 
 static const ElementStyle tempoSegmentStyle {
-    { Sid::tempoChangePosAbove, Pid::OFFSET },
     { Sid::tempoChangeMinDistance, Pid::MIN_DISTANCE }
 };
 
@@ -277,12 +275,6 @@ Sid GradualTempoChange::getPropertyStyle(Pid id) const
         return Sid::tempoChangeAlign;
     case Pid::BEGIN_TEXT:
         return Sid::letRingText;
-    case Pid::OFFSET:
-        if (placeAbove()) {
-            return Sid::tempoChangePosAbove;
-        } else {
-            return Sid::tempoChangePosBelow;
-        }
     default:
         break;
     }
@@ -386,18 +378,6 @@ GradualTempoChangeSegment* GradualTempoChangeSegment::clone() const
 GradualTempoChange* GradualTempoChangeSegment::tempoChange() const
 {
     return static_cast<GradualTempoChange*>(spanner());
-}
-
-Sid GradualTempoChangeSegment::getPropertyStyle(Pid id) const
-{
-    if (id == Pid::OFFSET) {
-        if (placeAbove()) {
-            return Sid::tempoPosAbove;
-        } else {
-            return Sid::tempoPosBelow;
-        }
-    }
-    return TextLineBaseSegment::getPropertyStyle(id);
 }
 
 GradualTempoChangeSegment* GradualTempoChangeSegment::findElementToSnapBefore() const

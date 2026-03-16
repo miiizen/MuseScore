@@ -65,7 +65,6 @@ static const ElementStyle voltaStyle {
     { Sid::voltaDashGapLen,                    Pid::DASH_GAP_LEN },
     { Sid::voltaHook,                          Pid::BEGIN_HOOK_HEIGHT },
     { Sid::voltaHook,                          Pid::END_HOOK_HEIGHT },
-    { Sid::voltaPosAbove,                      Pid::OFFSET },
     { Sid::voltaFontSpatiumDependent,          Pid::TEXT_SIZE_SPATIUM_DEPENDENT },
 };
 
@@ -149,7 +148,6 @@ String Volta::text() const
 //---------------------------------------------------------
 
 static const ElementStyle voltaSegmentStyle {
-    { Sid::voltaPosAbove,                      Pid::OFFSET },
     { Sid::voltaMinDistance,                   Pid::MIN_DISTANCE },
 };
 
