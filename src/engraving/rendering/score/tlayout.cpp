@@ -5825,6 +5825,9 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
         item->endText()->setSize(item->endText()->size() * item->defaultSpatium() / item->spatium());
     }
 
+    PointF offsetPos = tl->defaultOffset();
+    ldata->move(offsetPos);
+
     PointF pp1;
     PointF pp2(item->pos2());
 
