@@ -132,6 +132,10 @@ void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData*
     if (!item->isDynamic() && !(item->explicitParent() && item->parent()->isBox())) {
         computeTextHighResShape(item, ldata);
     }
+
+    PointF offsetPos = item->defaultOffset();
+
+    ldata->move(offsetPos);
 }
 
 void TextLayout::layoutBaseTextBase1(TextBase* item, const LayoutContext&)
