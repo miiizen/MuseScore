@@ -91,7 +91,7 @@ void MeasureNumberLayout::layoutMeasureNumber(MeasureNumber* item, MeasureNumber
         ldata->moveX(-itemBBox.right());
     }
 
-    PointF offsetPos = item->defaultOffset();
+    PointF offsetPos = item->defaultOffset() * item->staff()->staffMag(item->tick());
 
     ldata->move(offsetPos);
 
@@ -119,7 +119,7 @@ void MeasureNumberLayout::layoutMMRestRange(MMRestRange* item, MMRestRange::Layo
         ldata->setPosX(measureStartEnd.x1 - itemBBox.left());
     }
 
-    PointF offsetPos = item->defaultOffset();
+    PointF offsetPos = item->defaultOffset() * item->staff()->staffMag(item->tick());
 
     ldata->move(offsetPos);
 }
@@ -153,11 +153,6 @@ void MeasureNumberLayout::layoutMeasureNumberBase(MeasureNumberBase* item, Measu
         }
 
         ldata->setPosY(yoff);
-    }
-
-    if (item->isStyled(Pid::OFFSET)) {
-        PointF offset = item->propertyDefault(Pid::OFFSET).value<PointF>() * item->staff()->staffMag(item->tick());
-        item->setOffset(offset);
     }
 }
 
