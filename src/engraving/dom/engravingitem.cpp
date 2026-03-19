@@ -1388,8 +1388,6 @@ bool EngravingItem::elementAppliesToTrack(const track_idx_t refTrack) const
 void EngravingItem::setPlacementBasedOnVoiceAssignment(DirectionV styledDirection)
 {
     PlacementV oldPlacement = placement();
-    bool offsetIsStyled = isStyled(Pid::OFFSET);
-
     PlacementV newPlacement = PlacementV::BELOW;
 
     DirectionV internalDirectionProperty = getProperty(Pid::DIRECTION).value<DirectionV>();
@@ -1442,9 +1440,6 @@ void EngravingItem::setPlacementBasedOnVoiceAssignment(DirectionV styledDirectio
 
     if (newPlacement != oldPlacement) {
         setPlacement(newPlacement);
-        if (offsetIsStyled) {
-            resetProperty(Pid::OFFSET);
-        }
     }
 }
 

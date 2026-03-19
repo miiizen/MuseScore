@@ -1185,7 +1185,7 @@ void FretDiagram::setVisible(bool f)
 {
     EngravingItem::setVisible(f);
 
-    if (m_harmony && m_harmony->isStyled(Pid::OFFSET)) {
+    if (m_harmony && m_harmony->offset().isNull()) {
         m_harmony->resetProperty(Pid::OFFSET);
     }
 }
