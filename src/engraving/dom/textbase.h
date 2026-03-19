@@ -518,7 +518,7 @@ public:
 
     double spatiumScaling() const;
 
-    PointF defaultOffset() const;
+    PointF defaultOffset() const override;
 
 protected:
     TextBase(const ElementType& type, EngravingItem* parent = 0, TextStyleType tid = TextStyleType::DEFAULT,
@@ -548,7 +548,7 @@ private:
 
     static void swap(size_t& r1, size_t& c1, size_t& r2, size_t& c2);
 
-    Sid offsetSid() const;
+    Sid offsetSid() const override;
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
     AccessibleItemPtr createAccessible() override;
