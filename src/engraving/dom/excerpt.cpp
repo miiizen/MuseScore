@@ -776,10 +776,7 @@ static void processLinkedClone(EngravingItem* ne, Score* score, track_idx_t stra
 {
     // reset offset as most likely it will not fit
     PropertyFlags f = ne->propertyFlags(Pid::OFFSET);
-    if (f == PropertyFlags::UNSTYLED) {
-        ne->setPropertyFlags(Pid::OFFSET, PropertyFlags::STYLED);
-        ne->resetProperty(Pid::OFFSET);
-    }
+    ne->resetProperty(Pid::OFFSET);
     ne->setTrack(strack == muse::nidx ? 0 : strack);
     ne->setScore(score);
 }
