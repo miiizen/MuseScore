@@ -143,6 +143,7 @@
 #include "../compat/compatutils.h"
 #include "../compat/tremolocompat.h"
 #include "readcontext.h"
+#include "connectorinforeader.h"
 
 #include "log.h"
 
@@ -582,45 +583,6 @@ bool TRead::readItemProperties(EngravingItem* item, XmlReader& e, ReadContext& c
     return true;
 }
 
-static Spanner* tryCreateSpanner(const AsciiStringView& tag, ReadContext& ctx, bool requireNoteAnchor)
-{
-    ElementType type = TConv::fromXml(tag, ElementType::INVALID);
-    if (type == ElementType::INVALID) {
-        return nullptr;
-    }
-
-    EngravingItem* item = Factory::createItem(type, ctx.dummy());
-    if (!item || !item->isSpanner()) {
-        delete item;
-        return nullptr;
-    }
-
-    Spanner* spanner = toSpanner(item);
-    if ((spanner->anchor() == Spanner::Anchor::NOTE) != requireNoteAnchor) {
-        delete item;
-        return nullptr;
-    }
-
-    return spanner;
-}
-
-void TRead::readScoreSpanners(Score* score, XmlReader& e, ReadContext& ctx)
-{
-    while (e.readNextStartElement()) {
-        const AsciiStringView tag(e.name());
-        if (Spanner* spanner = tryCreateSpanner(tag, ctx, /*requireNoteAnchor*/ false)) {
-            TRead::readItem(spanner, e, ctx);
-            if (ctx.pasteMode()) {
-                score->undoAddElement(spanner);
-            } else {
-                score->addSpanner(spanner);
-            }
-        } else {
-            e.unknown();
-        }
-    }
-}
-
 void TRead::readItemEID(EngravingObject* item, XmlReader& xml, ReadContext& ctx)
 {
     AsciiStringView s = xml.readAsciiText();
@@ -730,6 +692,7 @@ void TRead::read(StaffText* t, XmlReader& xml, ReadContext& ctx)
 void TRead::read(StaveSharingLabel* t, XmlReader& xml, ReadContext& ctx)
 {
     while (xml.readNextStartElement()) {
+        const AsciiStringView tag(xml.name());
         if (!readProperties(static_cast<StaffTextBase*>(t), xml, ctx)) {
             xml.unknown();
         }
@@ -2653,6 +2616,8 @@ bool TRead::readProperties(ChordRest* ch, XmlReader& e, ReadContext& ctx)
     } else if (tag == "staffMove") {
         ch->setStaffMove(e.readInt());
         ch->checkStaffMoveValidity();
+    } else if (tag == "Spanner") {
+        readSpanner(e, ctx, ch, ch->track());
     } else if (tag == "Lyrics") {
         Lyrics* lyr = Factory::createLyrics(ch);
         lyr->setTrack(ctx.track());
@@ -3353,6 +3318,8 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
         a->setTrack(n->track());
         TRead::read(a, e, ctx);
         n->add(a);
+    } else if (tag == "Spanner") {
+        readSpanner(e, ctx, n, n->track());
     } else if (tag == "tpc2") {
         n->setTpc2(e.readInt());
     } else if (tag == "small") {
@@ -3459,8 +3426,6 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
             pt->setEndNote(n);
         }
         n->add(pt);
-    } else if (Spanner* spanner = tryCreateSpanner(tag, ctx, /*requireNoteAnchor*/ true)) {
-        TRead::readItem(spanner, e, ctx);
     } else if (tag == "overrideBendVisibilityRules") {
         n->setOverrideBendVisibilityRules(e.readBool());
     } else if (TRead::readProperty(n, tag, e, ctx, Pid::HIDE_GENERATED_PARENTHESES)) {
@@ -3776,7 +3741,9 @@ bool TRead::readProperties(SLine* l, XmlReader& e, ReadContext& ctx)
 {
     const AsciiStringView tag(e.name());
 
-    if (tag == "Segment") {
+    if (tag == "ticks") {
+        l->setTicks(Fraction::fromTicks(e.readInt()));
+    } else if (tag == "Segment") {
         LineSegment* ls = l->createLineSegment(l->score()->dummy()->system());
         ls->setTrack(l->track());     // needed in read to get the right staff mag
         l->add(ls);
@@ -3974,66 +3941,12 @@ void TRead::readNoteParenGroup(Chord* ch, XmlReader& e, ReadContext& ctx)
 bool TRead::readProperties(Spanner* s, XmlReader& e, ReadContext& ctx)
 {
     const AsciiStringView tag(e.name());
-    if (tag == "play") {
+    if (ctx.pasteMode() && (tag == "ticks_f")) {
+        s->setTicks(e.readFraction());
+        return true;
+    } else if (tag == "play") {
         s->setPlaySpanner(e.readBool());
         return true;
-    } else if (tag == "track2") {
-        track_idx_t track2 = e.readInt();
-        s->setTrack2(track2 + ctx.trackOffset());
-    } else if (tag == "startTick") {
-        Fraction startTick = e.readFraction() + ctx.tickOffset();
-        s->setTick(startTick);
-    } else if (tag == "ticks") {
-        Fraction ticks = e.readFraction();
-        s->setTicks(ticks);
-    } else if (tag == "startElement") {
-        EIDRegister* eidRegister = ctx.score()->masterScore()->eidRegister();
-        EID startElEID = EID::fromStdString(e.readAsciiText());
-        IF_ASSERT_FAILED(startElEID.isValid()) {
-            return false;
-        }
-        if (ctx.pasteMode()) {
-            startElEID = ctx.resolvePastedEID(startElEID);
-        }
-        if (s->anchor() == Spanner::Anchor::NOTE && !(s->isPartialTie() || s->isLaissezVib())) {
-            // Store spanner and EIDs to be connected at the end of file reading
-            ctx.addNoteAnchoredSpannerStartEl(s, startElEID);
-            return true;
-        }
-
-        EngravingItem* startEl = toEngravingItem(eidRegister->itemFromEID(startElEID));
-        IF_ASSERT_FAILED(startEl) {
-            return false;
-        }
-        s->setStartElement(startEl);
-        s->setTick(startEl->tick());
-        s->setTrack(startEl->track());
-    } else if (tag == "endElement") {
-        EIDRegister* eidRegister = ctx.score()->masterScore()->eidRegister();
-        EID endElEID = EID::fromStdString(e.readAsciiText());
-        IF_ASSERT_FAILED(endElEID.isValid()) {
-            return false;
-        }
-        if (ctx.pasteMode()) {
-            endElEID = ctx.resolvePastedEID(endElEID);
-        }
-        if (s->anchor() == Spanner::Anchor::NOTE && !(s->isPartialTie() || s->isLaissezVib())) {
-            // Store spanner and EIDs to be connected at the end of file reading
-            ctx.addNoteAnchoredSpannerEndEl(s, endElEID);
-            return true;
-        }
-
-        EngravingItem* endEl = toEngravingItem(eidRegister->itemFromEID(endElEID));
-        IF_ASSERT_FAILED(endEl) {
-            return false;
-        }
-        s->setEndElement(endEl);
-        if (s->anchor() == Spanner::Anchor::MEASURE) {
-            s->setTick2(s->endMeasure()->endTick());
-        } else {
-            s->setTick2(endEl->tick());
-            s->setTrack2(endEl->track());
-        }
     } else if (!readItemProperties(s, e, ctx)) {
         return false;
     }
@@ -4847,6 +4760,18 @@ bool TRead::readProperties(Volta* v, XmlReader& e, ReadContext& ctx)
     }
 
     return true;
+}
+
+void TRead::readSpanner(XmlReader& e, ReadContext& ctx, EngravingItem* current, track_idx_t track)
+{
+    std::shared_ptr<ConnectorInfoReader> info(new ConnectorInfoReader(e, &ctx, current, static_cast<int>(track)));
+    ConnectorInfoReader::readConnector(info, e, ctx);
+}
+
+void TRead::readSpanner(XmlReader& e, ReadContext& ctx, Score* current, track_idx_t track)
+{
+    std::shared_ptr<ConnectorInfoReader> info(new ConnectorInfoReader(e, &ctx, current, static_cast<int>(track)));
+    ConnectorInfoReader::readConnector(info, e, ctx);
 }
 
 void TRead::readPageLocks(Score* score, XmlReader& e)

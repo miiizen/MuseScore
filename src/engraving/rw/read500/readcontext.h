@@ -28,9 +28,12 @@
 
 #include "../types/types.h"
 
+#include "dom/connector.h"
 #include "dom/interval.h"
 #include "dom/location.h"
 #include "../infrastructure/eid.h"
+
+#include "connectorinforeader.h"
 
 namespace mu::engraving {
 class Beam;
@@ -58,7 +61,8 @@ class ReadContext
 {
 public:
 
-    ReadContext(Score* score, bool pasteMode = false);
+    ReadContext() = default;
+    ReadContext(Score* score);
     ~ReadContext();
 
     Score* score() const;
@@ -68,6 +72,7 @@ public:
     std::shared_ptr<IEngravingFontsProvider> engravingFonts() const;
 
     bool pasteMode() const { return _pasteMode; }
+    void setPasteMode(bool v) { _pasteMode = v; }
 
     String mscoreVersion() const;
     int mscVersion() const;
@@ -124,21 +129,28 @@ public:
     void fillLocation(Location&, bool forceAbsFrac = false) const;
     void setLocation(const Location&);   // sets a new reading point, taking into account its type (absolute or relative).
 
+    void addConnectorInfoLater(std::shared_ptr<ConnectorInfoReader> c);   // add connector info to be checked after calling checkConnectors()
+    void checkConnectors();
+    void reconnectBrokenConnectors();
+    void clearOrphanedConnectors();
+
     void addMMRestEndMeasureEID(Measure* mmrest, EID lastMeasureEID);
     void setMMRestEndMeasures();
 
     void registerPastedEID(const EID& clipboardEid, const EID& fileEid);
     EID resolvePastedEID(const EID& clipboardEid) const;
 
-    void addNoteAnchoredSpannerStartEl(Spanner* spanner, EID startElementEID);
-    void addNoteAnchoredSpannerEndEl(Spanner* spanner, EID endElementEID);
-    void connectNoteAnchoredSpanners();
-
 private:
+    void addConnectorInfo(std::shared_ptr<ConnectorInfoReader>);
+    void removeConnector(const ConnectorInfoReader*);   // Removes the whole ConnectorInfo chain from the connectors list.
+
     Score* m_score = nullptr;
 
     bool _pasteMode = false;  // modifies read behaviour on paste operation
     bool m_forcePageMode = false;
+
+    std::vector<std::shared_ptr<ConnectorInfoReader> > _connectors;
+    std::vector<std::shared_ptr<ConnectorInfoReader> > _pendingConnectors;  // connectors that are pending to be updated and added to _connectors. That will happen when checkConnectors() is called.
 
     Fraction _tick             { Fraction(0, 1) };
     Fraction _tickOffset       { Fraction(0, 1) };
@@ -165,7 +177,5 @@ private:
     // On pasting we must create new EIDs for the elements, as the serialized EIDs could be used elsewhere in the score
     // This map preserves the link between the old EID used to reference items within the section of the score which was copied and the newly created EID
     std::unordered_map<EID, EID> m_pastedEIDs;
-
-    std::map<Spanner*, std::pair<EID, EID> > m_incompleteNoteAnchoredSpanners;
 };
 }
