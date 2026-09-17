@@ -28,6 +28,7 @@
 #include "dom/score.h"
 #include "dom/sharedpart.h"
 #include "dom/staff.h"
+#include "dom/stavesharingchange.h"
 
 #include "transaction/transaction.h"
 #include "transaction/undoablecommand.h"
@@ -282,4 +283,18 @@ void EditStaveSharing::handleRemovePart(Transaction& tx, Part* part)
             tx.push(new DisconnectSharedPart(sharedPart, originPart));
         }
     }
+}
+
+void EditStaveSharing::addStaveSharingChange(Transaction&, Segment* seg, track_idx_t track)
+{
+    IF_ASSERT_FAILED(seg) {
+        LOGE() << "Invalid segment. Can't add stave sharing change";
+    }
+
+    Score* score = seg->score();
+    EngravingItem* ssc = Factory::createStaveSharingChange(seg);
+
+    ssc->setOwnershipParent(seg);
+    ssc->setTrack(trackZeroVoice(track));
+    score->undoAddElement(ssc);
 }

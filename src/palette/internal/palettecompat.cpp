@@ -464,6 +464,7 @@ void PaletteCompat::addNewLayoutItems(Palette& layoutPalette, engraving::Score* 
     bool containsFFrame = false;
     bool containsLock = false;
     bool containsNoBreak = false;
+    bool containsStaveSharingChange = false;
     for (const PaletteCellPtr& cell : layoutPalette.cells()) {
         const ElementPtr element = cell->element;
         if (!element) {
@@ -478,6 +479,9 @@ void PaletteCompat::addNewLayoutItems(Palette& layoutPalette, engraving::Score* 
         }
         if (element->isLayoutBreak() && toLayoutBreak(element.get())->layoutBreakType() == LayoutBreakType::NOBREAK) {
             containsNoBreak = true;
+        }
+        if (element->isActionIcon() && toActionIcon(element.get())->actionType() == ActionIconType::STAVE_SHARING_CHANGE) {
+            containsStaveSharingChange = true;
         }
     }
 
@@ -496,6 +500,11 @@ void PaletteCompat::addNewLayoutItems(Palette& layoutPalette, engraving::Score* 
     if (!containsLock) {
         int defaultPosition = std::min(5, layoutPalette.cellsCount());
         layoutPalette.insertActionIcon(defaultPosition, ActionIconType::PAGE_LOCK, "toggle-page-lock");
+    }
+
+    if (!containsStaveSharingChange) {
+        int defaultPosition = std::min(15, layoutPalette.cellsCount());
+        layoutPalette.insertActionIcon(defaultPosition, ActionIconType::STAVE_SHARING_CHANGE, "insert-stave-sharing-change");
     }
 }
 

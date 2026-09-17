@@ -98,6 +98,7 @@
 #include "stafftext.h"
 #include "stafftypechange.h"
 #include "staffvisibilityindicator.h"
+#include "stavesharingchange.h"
 #include "stavesharinglabel.h"
 #include "stem.h"
 #include "stemslash.h"
@@ -182,6 +183,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::MMREST_RANGE:      return new MMRestRange(parent->isMeasure() ? toMeasure(parent) : dummy->measure());
     case ElementType::INSTRUMENT_NAME:   return new InstrumentName(parent->isSystem() ? toSystem(parent) : dummy->system());
     case ElementType::STAFF_TEXT:        return new StaffText(parent->isSegment() ? toSegment(parent) : dummy->segment());
+    case ElementType::STAVE_SHARING_CHANGE: return new StaveSharingChange(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::STAVE_SHARING_LABEL: return new StaveSharingLabel(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::PLAY_COUNT_TEXT:   return new PlayCountText(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::PLAYTECH_ANNOTATION: return new PlayTechAnnotation(parent->isSegment() ? toSegment(parent) : dummy->segment());
@@ -551,7 +553,9 @@ StaffText* Factory::createStaffText(Segment * parent, TextStyleType textStyleTyp
     return staffText;
 }
 
-StaveSharingLabel* Factory::createStaveSharingLabel(Segment* parent, TextStyleType textStyleType, bool isAccessibleEnabled)
+CREATE_ITEM_IMPL(StaveSharingChange, Segment, isAccessibleEnabled)
+
+StaveSharingLabel* Factory::createStaveSharingLabel(Segment * parent, TextStyleType textStyleType, bool isAccessibleEnabled)
 {
     StaveSharingLabel* staveSharingLabel = new StaveSharingLabel(parent, textStyleType);
     staveSharingLabel->setAccessibleEnabled(isAccessibleEnabled);

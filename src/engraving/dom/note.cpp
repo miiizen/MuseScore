@@ -38,6 +38,7 @@
 #include "../editing/editchord.h"
 #include "../editing/editnote.h"
 #include "../editing/editparentheses.h"
+#include "../editing/editstavesharing.h"
 #include "../editing/noteinput.h"
 #include "../editing/transaction/transaction.h"
 #include "../editing/transpose.h"
@@ -1833,6 +1834,7 @@ bool Note::acceptDrop(EditData& data) const
         case ActionIconType::DIP:
         case ActionIconType::SCOOP:
         case ActionIconType::NOTE_ANCHORED_LINE:
+        case ActionIconType::STAVE_SHARING_CHANGE:
             return true;
         default: break;
         }
@@ -2003,8 +2005,9 @@ EngravingItem* Note::drop(Transaction& tx, EditData& data)
             score()->select(note, SelectType::SINGLE, 0);
             break;
         }
-        case mu::engraving::ActionIconType::NOTE_ANCHORED_LINE:
+        case ActionIconType::NOTE_ANCHORED_LINE:
             score()->addNoteLine();
+            break;
         default:
             break;
         }

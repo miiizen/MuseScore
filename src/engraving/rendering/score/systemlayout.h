@@ -54,6 +54,7 @@ class Segment;
 class SkylineLine;
 class Spanner;
 class StaffText;
+class StaveSharingChange;
 class Sticking;
 class System;
 class SystemText;
@@ -128,6 +129,7 @@ private:
         std::vector<HarpPedalDiagram*> harpDiagrams;
         std::vector<FretDiagram*> fretDiagrams;
         std::vector<StaffTextBase*> staffText;
+        std::vector<StaveSharingChange*> staveSharingChanges;
         std::vector<InstrumentChange*> instrChanges;
         std::vector<SystemText*> systemText;
         std::vector<EngravingItem*> playTechCapoStringTunTripletFeel;

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited and others
+ * Copyright (C) 2026 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,11 +20,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "staffvisibilityindicator.h"
+#pragma once
 
-using namespace mu::engraving;
+#include "indicatoricon.h"
 
-StaffVisibilityIndicator::StaffVisibilityIndicator(System* parent)
-    : SystemIndicatorIcon(ElementType::STAFF_VISIBILITY_INDICATOR, parent, ElementFlag::SYSTEM | ElementFlag::GENERATED)
+namespace mu::engraving {
+class SystemIndicatorIcon : public IndicatorIcon
 {
+    OBJECT_ALLOCATOR(engraving, SystemIndicatorIcon)
+
+public:
+    SystemIndicatorIcon(const ElementType& type, System* parent, ElementFlags flags = ElementFlag::NOTHING);
+
+    System* system() const { return toSystem(ownershipParent()); }
+
+    Fraction tick() const override;
+};
 }

@@ -1764,6 +1764,13 @@ const UiActionList NotationUiActions::s_actions = {
              TranslatableString("action", "Lock/unlock selected page(s)"),
              IconCode::Code::PAGE_LOCK
              ),
+    UiAction("insert-stave-sharing-change",
+             mu::context::UiCtxProjectOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Stave sharing change"),
+             TranslatableString("action", "Insert stave sharing change"),
+             IconCode::Code::STAVE_SHARING_CHANGE
+             ),
     UiAction("enh-both",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,

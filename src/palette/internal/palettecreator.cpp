@@ -571,6 +571,7 @@ PalettePtr PaletteCreator::newLayoutPalette()
     sp->appendActionIcon(ActionIconType::FFRAME, "insert-fretframe", FRAME_MAG);
     sp->appendActionIcon(ActionIconType::STAFF_TYPE_CHANGE, "insert-staff-type-change");
     sp->appendActionIcon(ActionIconType::MEASURE, "insert-measure");
+    sp->appendActionIcon(ActionIconType::STAVE_SHARING_CHANGE, "insert-stave-sharing-change");
 
     return sp;
 }

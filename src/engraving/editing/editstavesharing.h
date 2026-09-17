@@ -23,11 +23,14 @@
 
 #include <vector>
 
+#include "../types/types.h"
+
 namespace mu::engraving {
 class Instrument;
 class KeyList;
 class Part;
 class Score;
+class Segment;
 class SharedPart;
 class StaffType;
 class Transaction;
@@ -40,6 +43,8 @@ class EditStaveSharing
 public:
     static void toggleStaveSharing(Transaction& tx, Score* score, bool on);
     static void handleRemovePart(Transaction& tx, Part* part);
+
+    static void addStaveSharingChange(Transaction& tx, Segment* seg, track_idx_t track);
 
 private:
     static void cmdCreateSharedStaves(Transaction& tx, Score* score);

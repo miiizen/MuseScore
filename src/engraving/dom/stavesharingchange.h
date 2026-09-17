@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited and others
+ * Copyright (C) 2026 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,11 +20,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "staffvisibilityindicator.h"
+#pragma once
 
-using namespace mu::engraving;
+#include "indicatoricon.h"
 
-StaffVisibilityIndicator::StaffVisibilityIndicator(System* parent)
-    : SystemIndicatorIcon(ElementType::STAFF_VISIBILITY_INDICATOR, parent, ElementFlag::SYSTEM | ElementFlag::GENERATED)
+namespace mu::engraving {
+class StaveSharingChange final : public IndicatorIcon
 {
+    OBJECT_ALLOCATOR(engraving, StaveSharingChange)
+    DECLARE_CLASSOF(ElementType::STAVE_SHARING_CHANGE)
+
+public:
+    StaveSharingChange(Segment* parent);
+    StaveSharingChange* clone() const override { return new StaveSharingChange(*this); }
+
+    // TODO: placeholder icon, to be replaced once the stave-sharing-change glyph is decided
+    char16_t iconCode() const override { return 0xF4A0; }
+};
 }

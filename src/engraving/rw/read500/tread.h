@@ -151,6 +151,7 @@ class Staff;
 class StaffLabel;
 class StaffState;
 class StaffText;
+class StaveSharingChange;
 class StaveSharingLabel;
 class StaffTextBase;
 class StaffType;
@@ -306,6 +307,7 @@ public:
     static void read(Staff* s, XmlReader& xml, ReadContext& ctx);
     static void read(StaffState* s, XmlReader& xml, ReadContext& ctx);
     static void read(StaffText* t, XmlReader& xml, ReadContext& ctx);
+    static void read(StaveSharingChange* t, XmlReader& xml, ReadContext& ctx);
     static void read(StaveSharingLabel* t, XmlReader& xml, ReadContext& ctx);
     static void read(StaffTextBase* t, XmlReader& xml, ReadContext& ctx);
     static void read(StaffType* t, XmlReader& xml, ReadContext& ctx);

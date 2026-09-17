@@ -133,6 +133,7 @@ class Staff;
 class StaffLabel;
 class StaffState;
 class StaffText;
+class StaveSharingChange;
 class StaveSharingLabel;
 class StaffTextBase;
 class StaffType;
@@ -280,6 +281,7 @@ public:
     static void write(const Staff* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const StaffState* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const StaffText* item, XmlWriter& xml, WriteContext& ctx);
+    static void write(const StaveSharingChange* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const StaveSharingLabel* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const StaffType* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const StaffTypeChange* item, XmlWriter& xml, WriteContext& ctx);
