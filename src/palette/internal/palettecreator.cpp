@@ -572,6 +572,7 @@ PalettePtr PaletteCreator::newLayoutPalette()
     sp->appendActionIcon(ActionIconType::STAFF_TYPE_CHANGE, "insert-staff-type-change");
     sp->appendActionIcon(ActionIconType::MEASURE, "insert-measure");
     sp->appendActionIcon(ActionIconType::STAVE_SHARING_CHANGE, "insert-stave-sharing-change");
+    sp->appendActionIcon(ActionIconType::RESET_STAVE_SHARING_CHANGE, "reset-stave-sharing-change");
 
     return sp;
 }

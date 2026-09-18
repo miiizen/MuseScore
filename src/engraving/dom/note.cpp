@@ -1834,8 +1834,10 @@ bool Note::acceptDrop(EditData& data) const
         case ActionIconType::DIP:
         case ActionIconType::SCOOP:
         case ActionIconType::NOTE_ANCHORED_LINE:
-        case ActionIconType::STAVE_SHARING_CHANGE:
             return true;
+        case ActionIconType::STAVE_SHARING_CHANGE:
+        case ActionIconType::RESET_STAVE_SHARING_CHANGE:
+            return part()->isSharedPart();
         default: break;
         }
         break;

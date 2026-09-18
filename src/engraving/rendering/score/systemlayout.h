@@ -97,7 +97,7 @@ private:
         double measurePos = 0.0;
         std::map<EngravingItem*, PointF> elementPositions;
         std::map<EngravingItem*, double> elementWidths;
-        std::map<SharedPart*, SharedTrackMap> sharedTrackMaps;
+        std::map<SharedPart*, SharedTrackMapByTickEntry> sharedTrackMaps;
         bool curHeader = false;
         bool curTrailer = false;
 

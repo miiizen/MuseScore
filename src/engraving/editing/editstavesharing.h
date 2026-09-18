@@ -33,6 +33,7 @@ class Score;
 class Segment;
 class SharedPart;
 class StaffType;
+class StaveSharingChange;
 class Transaction;
 
 using StaveSharingGroup = std::vector<Part*>;
@@ -44,7 +45,8 @@ public:
     static void toggleStaveSharing(Transaction& tx, Score* score, bool on);
     static void handleRemovePart(Transaction& tx, Part* part);
 
-    static void addStaveSharingChange(Transaction& tx, Segment* seg, track_idx_t track);
+    static void addStaveSharingChange(Transaction& tx, Segment* seg, track_idx_t track, bool reset);
+    static void removeStaveSharingChange(Transaction& tx, StaveSharingChange* staveSharingChange);
 
 private:
     static void cmdCreateSharedStaves(Transaction& tx, Score* score);

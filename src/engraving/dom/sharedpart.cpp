@@ -79,7 +79,7 @@ void SharedPart::removeOriginPart(Part* p)
     computeIsSameInstruments();
 }
 
-const SharedTrackMap& SharedPart::trackMapAtTick(const Fraction& tick) const
+const SharedTrackMapByTickEntry& SharedPart::trackMapAtTick(const Fraction& tick) const
 {
     static constexpr Fraction TICK_ZERO = Fraction(0, 1);
 
@@ -102,12 +102,17 @@ const SharedTrackMap& SharedPart::trackMapAtTick(const Fraction& tick) const
     return upperBound->second;
 }
 
-void SharedPart::setTrackMapAtTick(const SharedTrackMap& map, const Fraction& tick)
+void SharedPart::setTrackMapAtTick(const SharedTrackMapByTickEntry& map, const Fraction& tick)
 {
     m_trackMapsByTick[tick] = map;
 }
 
-void mu::engraving::SharedPart::removeMapsBetweenTicks(const Fraction& startTick, const Fraction& endTick)
+void SharedPart::removeMapAtTick(const Fraction& tick)
+{
+    m_trackMapsByTick.erase(tick);
+}
+
+void SharedPart::removeMapsBetweenTicks(const Fraction& startTick, const Fraction& endTick, bool removeUserChanges)
 {
     auto upperBound = m_trackMapsByTick.lower_bound(startTick);
     if (upperBound == m_trackMapsByTick.end()) {
@@ -118,8 +123,25 @@ void mu::engraving::SharedPart::removeMapsBetweenTicks(const Fraction& startTick
         if (iter->first >= endTick) {
             break;
         }
+        if (iter->second.isUserModified() && !removeUserChanges) {
+            ++iter;
+            continue;
+        }
         iter = m_trackMapsByTick.erase(iter);
     }
+}
+
+std::map<Fraction, SharedTrackMapByTickEntry> SharedPart::trackMapsBetweenTicks(const Fraction& startTick,
+                                                                                const Fraction& endTick) const
+{
+    std::map<Fraction, SharedTrackMapByTickEntry> result;
+
+    auto lowerBound = m_trackMapsByTick.lower_bound(startTick);
+    for (auto iter = lowerBound; iter != m_trackMapsByTick.end() && iter->first < endTick; ++iter) {
+        result.emplace(iter->first, iter->second);
+    }
+
+    return result;
 }
 
 bool SharedPart::isSameInstrumentsAtTick(const Fraction& tick)
@@ -143,7 +165,7 @@ void SharedPart::computeIsSameInstruments()
     m_isSameInstruments = isSameInstrumentsAtTick(Fraction(0, 1));
 }
 
-mu::engraving::String mu::engraving::SharedPart::partName() const
+String SharedPart::partName() const
 {
     const Instrument* i = instrument();
     String fullName = i->longName();

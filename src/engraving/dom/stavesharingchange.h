@@ -25,6 +25,8 @@
 #include "indicatoricon.h"
 
 namespace mu::engraving {
+struct SharedTrackMapByTickEntry;
+
 class StaveSharingChange final : public IndicatorIcon
 {
     OBJECT_ALLOCATOR(engraving, StaveSharingChange)
@@ -34,7 +36,12 @@ public:
     StaveSharingChange(Segment* parent);
     StaveSharingChange* clone() const override { return new StaveSharingChange(*this); }
 
-    // TODO: placeholder icon, to be replaced once the stave-sharing-change glyph is decided
-    char16_t iconCode() const override { return 0xF4A0; }
+    char16_t iconCode() const override;
+
+    const SharedTrackMapByTickEntry* trackMap() const;
+
+    PropertyValue getProperty(Pid id) const override;
+    PropertyValue propertyDefault(Pid id) const override;
+    bool setProperty(Pid id, const PropertyValue& val) override;
 };
 }

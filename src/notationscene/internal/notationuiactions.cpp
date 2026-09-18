@@ -1771,6 +1771,13 @@ const UiActionList NotationUiActions::s_actions = {
              TranslatableString("action", "Insert stave sharing change"),
              IconCode::Code::STAVE_SHARING_CHANGE
              ),
+    UiAction("reset-stave-sharing-change",
+             mu::context::UiCtxProjectOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Reset stave sharing change"),
+             TranslatableString("action", "Reset stave sharing change"),
+             IconCode::Code::UNDO
+             ),
     UiAction("enh-both",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,

@@ -28,6 +28,33 @@ namespace mu::engraving {
 using SharedTrackMap = std::map<track_idx_t, track_idx_t>;
 std::string dump(const SharedTrackMap& map);
 
+struct SharedTrackMapByTickEntry {
+    SharedTrackMapByTickEntry() {}
+    SharedTrackMapByTickEntry(SharedTrackMap trackMap, bool isUserModified = false)
+        : m_sharedTrackMap(trackMap), m_isUserModified(isUserModified) {}
+
+    const SharedTrackMap& sharedTrackMap() const { return m_sharedTrackMap; }
+    void setSharedTrackMap(SharedTrackMap map) { m_sharedTrackMap = map; }
+
+    void setIsUserModified(bool val) { m_isUserModified = val; }
+    bool isUserModified() const { return m_isUserModified; }
+
+    void setIsReset(bool val) { m_isReset = val; }
+    bool isReset() const { return m_isReset; }
+
+    bool operator==(const SharedTrackMapByTickEntry& other) const
+    {
+        return m_sharedTrackMap == other.m_sharedTrackMap && m_isUserModified == other.m_isUserModified;
+    }
+
+    bool operator!=(const SharedTrackMapByTickEntry& other) const { return !(*this == other); }
+
+private:
+    SharedTrackMap m_sharedTrackMap;
+    bool m_isUserModified = false;
+    bool m_isReset = false;
+};
+
 class SharedPart final : public Part
 {
     OBJECT_ALLOCATOR(engraving, SharedPart)
@@ -49,9 +76,11 @@ public:
     bool enabled() const;
     bool show() const override;
 
-    const SharedTrackMap& trackMapAtTick(const Fraction& tick) const;
-    void setTrackMapAtTick(const SharedTrackMap& map, const Fraction& tick);
-    void removeMapsBetweenTicks(const Fraction& startTick, const Fraction& endTick);
+    const SharedTrackMapByTickEntry& trackMapAtTick(const Fraction& tick) const;
+    void setTrackMapAtTick(const SharedTrackMapByTickEntry& map, const Fraction& tick);
+    void removeMapAtTick(const Fraction& tick);
+    void removeMapsBetweenTicks(const Fraction& startTick, const Fraction& endTick, bool removeUserChanges);
+    std::map<Fraction, SharedTrackMapByTickEntry> trackMapsBetweenTicks(const Fraction& startTick, const Fraction& endTick) const;
 
     bool isSameInstrumentsAtTick(const Fraction& tick);
 
@@ -63,6 +92,6 @@ private:
 
     bool m_enabled = true;
     std::vector<Part*> m_originParts;
-    std::map<Fraction, SharedTrackMap> m_trackMapsByTick { { Fraction(0, 1), SharedTrackMap() } };
+    std::map<Fraction, SharedTrackMapByTickEntry> m_trackMapsByTick { { Fraction(0, 1), SharedTrackMapByTickEntry() } };
 };
 }

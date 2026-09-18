@@ -118,7 +118,6 @@
 #include "../../dom/stafftextbase.h"
 #include "../../dom/stafftype.h"
 #include "../../dom/stafftypechange.h"
-#include "../../dom/stavesharingchange.h"
 #include "../../dom/stavesharinglabel.h"
 #include "../../dom/stem.h"
 #include "../../dom/stemslash.h"
@@ -303,8 +302,6 @@ void TRead::readItem(EngravingItem* item, XmlReader& xml, ReadContext& ctx)
     case ElementType::STAFF_STATE: read(item_cast<StaffState*>(item), xml, ctx);
         break;
     case ElementType::STAFF_TEXT: read(item_cast<StaffText*>(item), xml, ctx);
-        break;
-    case ElementType::STAVE_SHARING_CHANGE: read(item_cast<StaveSharingChange*>(item), xml, ctx);
         break;
     case ElementType::STAVE_SHARING_LABEL: read(item_cast<StaveSharingLabel*>(item), xml, ctx);
         break;
@@ -731,15 +728,6 @@ void TRead::read(StaffText* t, XmlReader& xml, ReadContext& ctx)
             read(flag, xml, ctx);
             t->setSoundFlag(flag);
         } else if (!readProperties(static_cast<StaffTextBase*>(t), xml, ctx)) {
-            xml.unknown();
-        }
-    }
-}
-
-void TRead::read(StaveSharingChange* t, XmlReader& xml, ReadContext& ctx)
-{
-    while (xml.readNextStartElement()) {
-        if (!readItemProperties(t, xml, ctx)) {
             xml.unknown();
         }
     }
@@ -1907,7 +1895,8 @@ static void setActionIconTypeFromAction(ActionIcon* i, const std::string& action
 
         { "toggle-system-lock", ActionIconType::SYSTEM_LOCK },
         { "toggle-page-lock", ActionIconType::PAGE_LOCK },
-        { "insert-stave-sharing-change", ActionIconType::STAVE_SHARING_CHANGE }
+        { "insert-stave-sharing-change", ActionIconType::STAVE_SHARING_CHANGE },
+        { "reset-stave-sharing-change", ActionIconType::RESET_STAVE_SHARING_CHANGE },
     };
 
     auto it = map.find(actionCode);

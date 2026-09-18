@@ -22,11 +22,49 @@
 
 #include "stavesharingchange.h"
 
+#include "part.h"
 #include "segment.h"
+#include "sharedpart.h"
 
 using namespace mu::engraving;
 
 StaveSharingChange::StaveSharingChange(Segment* parent)
-    : IndicatorIcon(ElementType::STAVE_SHARING_CHANGE, parent)
+    : IndicatorIcon(ElementType::STAVE_SHARING_CHANGE, parent, ElementFlag::GENERATED)
 {
+}
+
+char16_t StaveSharingChange::iconCode() const
+{
+    if (trackMap() && trackMap()->isReset()) {
+        return 0xEF19;
+    }
+
+    // TODO: placeholder icon, to be replaced once the stave-sharing-change glyph is decided
+    return 0xF4A0;
+}
+
+const SharedTrackMapByTickEntry* StaveSharingChange::trackMap() const
+{
+    SharedPart* sharedPart = part() && part()->isSharedPart() ? toSharedPart(part()) : nullptr;
+
+    if (!sharedPart) {
+        return nullptr;
+    }
+
+    return &sharedPart->trackMapAtTick(tick());
+}
+
+PropertyValue StaveSharingChange::getProperty(Pid id) const
+{
+    return IndicatorIcon::getProperty(id);
+}
+
+PropertyValue StaveSharingChange::propertyDefault(Pid id) const
+{
+    return IndicatorIcon::propertyDefault(id);
+}
+
+bool StaveSharingChange::setProperty(Pid id, const PropertyValue& val)
+{
+    return IndicatorIcon::setProperty(id, val);
 }

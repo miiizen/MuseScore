@@ -51,6 +51,8 @@ enum class CommandType : signed char {
     SortStaves,
     ChangeStaff,
     ChangeStaffType,
+    AddStaveSharingChange,
+    RemoveStaveSharingChange,
 
     // MStaves
     InsertMStaff,

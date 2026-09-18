@@ -49,7 +49,7 @@ private:
         std::vector<Spanner*> overlappingSpanners;
 
         SharedPart* curSharedPart = nullptr;
-        SharedTrackMap curTrackMap;
+        const SharedTrackMapByTickEntry& curTrackMap(const Fraction& tick) const;
         std::unordered_set<Note*> sharedUnisonNotes;
         std::vector<StaveSharingLabel*> oldStaveSharingLabels;
         std::vector<StaveSharingLabel*> updatedStaveSharingLabels;
@@ -64,7 +64,7 @@ private:
     static void updateStaveSharing(StaveSharingContext& ctx);
 
     static void updateTrackMaps(StaveSharingContext& ctx);
-    static SharedTrackMap computeTrackMap(StaveSharingContext& ctx);
+    static SharedTrackMapByTickEntry computeTrackMap(StaveSharingContext& ctx);
 
     static bool isEmpty(track_idx_t track, StaveSharingContext& ctx);
 
@@ -99,6 +99,8 @@ private:
     static String formatUnisonLabel(Note* unisonNote, const SharedTrackMap& trackMap, bool isForNewSystem, const StaveSharingContext& ctx);
     static String formatInstrumentChangeLable(const InstrumentChange* originChange, const InstrumentChange* sharedChange,
                                               const StaveSharingContext& ctx);
+
+    static void makeStaveSharingChanges(const StaveSharingContext& ctx);
 
     static void manageVoicePropertyAndTrackForSharedItems(const std::vector<EngravingItem*>& sharedItems, track_idx_t startOriginTrack,
                                                           track_idx_t endOriginTrack, const SharedTrackMap& trackMap);

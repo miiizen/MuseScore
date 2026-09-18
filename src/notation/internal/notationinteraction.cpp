@@ -1565,7 +1565,6 @@ bool NotationInteraction::updateDropSingle(const PointF& pos, Qt::KeyboardModifi
     case ElementType::ORNAMENT:
     case ElementType::EXPRESSION:
     case ElementType::STAFF_TEXT:
-    case ElementType::STAVE_SHARING_CHANGE:
     case ElementType::STAVE_SHARING_LABEL:
     case ElementType::SYSTEM_TEXT:
     case ElementType::TRIPLET_FEEL:
@@ -3267,7 +3266,8 @@ std::vector<RectF> NotationInteraction::dropHighlightRects(const EngravingItem* 
             return { RectF(topLeft, targetMeasure->canvasBoundingRect().bottomRight()) };
         }
 
-        case ActionIconType::STAVE_SHARING_CHANGE: {
+        case ActionIconType::STAVE_SHARING_CHANGE:
+        case ActionIconType::RESET_STAVE_SHARING_CHANGE: {
             const System* sys = targetMeasure->system();
             const MeasureBase* last = sys ? sys->last() : nullptr;
             const double right = last ? last->canvasBoundingRect().right() : staffRect.right();
