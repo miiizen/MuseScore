@@ -48,6 +48,8 @@ public:
     static void addStaveSharingChange(Transaction& tx, Segment* seg, track_idx_t track, bool reset);
     static void removeStaveSharingChange(Transaction& tx, StaveSharingChange* staveSharingChange);
 
+    static void setTrackMapping(Transaction& tx, Segment* seg, track_idx_t track, track_idx_t originTrack, track_idx_t sharedTrack);
+
 private:
     static void cmdCreateSharedStaves(Transaction& tx, Score* score);
     static void cmdRemoveSharedStaves(Score* score);

@@ -53,18 +53,3 @@ const SharedTrackMapByTickEntry* StaveSharingChange::trackMap() const
 
     return &sharedPart->trackMapAtTick(tick());
 }
-
-PropertyValue StaveSharingChange::getProperty(Pid id) const
-{
-    return IndicatorIcon::getProperty(id);
-}
-
-PropertyValue StaveSharingChange::propertyDefault(Pid id) const
-{
-    return IndicatorIcon::propertyDefault(id);
-}
-
-bool StaveSharingChange::setProperty(Pid id, const PropertyValue& val)
-{
-    return IndicatorIcon::setProperty(id, val);
-}

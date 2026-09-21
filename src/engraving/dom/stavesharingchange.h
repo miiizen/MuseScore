@@ -40,8 +40,6 @@ public:
 
     const SharedTrackMapByTickEntry* trackMap() const;
 
-    PropertyValue getProperty(Pid id) const override;
-    PropertyValue propertyDefault(Pid id) const override;
-    bool setProperty(Pid id, const PropertyValue& val) override;
+    Segment* segment() const { return (Segment*)ownershipParent(); }
 };
 }

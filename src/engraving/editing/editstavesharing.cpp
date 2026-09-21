@@ -362,6 +362,28 @@ void EditStaveSharing::addStaveSharingChange(Transaction& tx, Segment* seg, trac
     LOGI() << "ADD!";
 }
 
+void EditStaveSharing::setTrackMapping(Transaction& tx, Segment* seg, track_idx_t track, track_idx_t originTrack, track_idx_t sharedTrack)
+{
+    Score* score = seg ? seg->score() : nullptr;
+    Staff* staff = score ? score->staff(track2staff(track)) : nullptr;
+    Part* part = staff ? staff->part() : nullptr;
+    IF_ASSERT_FAILED(part && part->isSharedPart()) {
+        return;
+    }
+    SharedPart* sharedPart = toSharedPart(part);
+
+    SharedTrackMapByTickEntry newTrackMap = sharedPart->trackMapAtTick(seg->tick());
+    SharedTrackMap map = newTrackMap.sharedTrackMap();
+    map[originTrack] = sharedTrack;
+    newTrackMap.setSharedTrackMap(map);
+    newTrackMap.setIsUserModified(true);
+    newTrackMap.setIsReset(false);
+
+    tx.push(new AddStaveSharingChange(sharedPart, seg->tick(), newTrackMap));
+
+    seg->triggerLayout();
+}
+
 void EditStaveSharing::removeStaveSharingChange(Transaction& tx, StaveSharingChange* staveSharingChange)
 {
     Part* part = staveSharingChange->part();
