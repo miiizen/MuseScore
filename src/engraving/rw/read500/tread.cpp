@@ -1894,7 +1894,9 @@ static void setActionIconTypeFromAction(ActionIcon* i, const std::string& action
         { "add-noteline", ActionIconType::NOTE_ANCHORED_LINE },
 
         { "toggle-system-lock", ActionIconType::SYSTEM_LOCK },
-        { "toggle-page-lock", ActionIconType::PAGE_LOCK }
+        { "toggle-page-lock", ActionIconType::PAGE_LOCK },
+        { "insert-stave-sharing-change", ActionIconType::STAVE_SHARING_CHANGE },
+        { "reset-stave-sharing-change", ActionIconType::RESET_STAVE_SHARING_CHANGE },
     };
 
     auto it = map.find(actionCode);

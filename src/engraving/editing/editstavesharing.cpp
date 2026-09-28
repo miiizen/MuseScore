@@ -28,6 +28,7 @@
 #include "dom/score.h"
 #include "dom/sharedpart.h"
 #include "dom/staff.h"
+#include "dom/stavesharingchange.h"
 
 #include "transaction/transaction.h"
 #include "transaction/undoablecommand.h"
@@ -87,6 +88,61 @@ public:
 
     UNDO_TYPE(CommandType::DisconnectSharedPart)
     UNDO_NAME("Disconnect shared part")
+};
+
+class AddStaveSharingChange : public UndoableCommand
+{
+    OBJECT_ALLOCATOR(engraving, AddStaveSharingChange)
+
+    SharedPart* m_sharedPart = nullptr;
+    Fraction m_tick = Fraction();
+    SharedTrackMapByTickEntry m_trackMap = SharedTrackMapByTickEntry();
+
+public:
+    AddStaveSharingChange(SharedPart* s, Fraction t, SharedTrackMapByTickEntry m)
+        : m_sharedPart(s), m_tick(t), m_trackMap(m) {}
+
+    void undo() override
+    {
+        m_sharedPart->removeMapAtTick(m_tick);
+    }
+
+    void redo() override
+    {
+        m_sharedPart->setTrackMapAtTick(m_trackMap, m_tick);
+    }
+
+    UNDO_TYPE(CommandType::AddStaveSharingChange)
+    UNDO_NAME("Add stave sharing change")
+};
+
+class RemoveStaveSharingChange : public UndoableCommand
+{
+    OBJECT_ALLOCATOR(engraving, RemoveStaveSharingChange)
+
+    SharedPart* m_sharedPart = nullptr;
+    Fraction m_tick = Fraction();
+    SharedTrackMapByTickEntry m_trackMap = SharedTrackMapByTickEntry();
+
+public:
+    RemoveStaveSharingChange(SharedPart* s, Fraction t)
+        : m_sharedPart(s), m_tick(t) {}
+
+    void undo() override
+    {
+        // TODO not specific enough
+        m_sharedPart->setTrackMapAtTick(m_trackMap, m_tick);
+    }
+
+    void redo() override
+    {
+        // TODO not specific enough
+        m_trackMap = m_sharedPart->trackMapAtTick(m_tick);
+        m_sharedPart->removeMapAtTick(m_tick);
+    }
+
+    UNDO_TYPE(CommandType::RemoveStaveSharingChange)
+    UNDO_NAME("Remove stave sharing change")
 };
 }
 
@@ -282,4 +338,61 @@ void EditStaveSharing::handleRemovePart(Transaction& tx, Part* part)
             tx.push(new DisconnectSharedPart(sharedPart, originPart));
         }
     }
+}
+
+void EditStaveSharing::addStaveSharingChange(Transaction& tx, Segment* seg, track_idx_t track, bool reset)
+{
+    Score* score = seg ? seg->score() : nullptr;
+    Staff* staff = score ? score->staff(track2staff(track)) : nullptr;
+    Part* part = staff ? staff->part() : nullptr;
+    IF_ASSERT_FAILED(part && part->isSharedPart()) {
+        return;
+    }
+    SharedPart* sharedPart = toSharedPart(part);
+
+    // Use current state to initialise map
+    SharedTrackMapByTickEntry newTrackMap = sharedPart->trackMapAtTick(seg->tick());
+    newTrackMap.setUserTrackMap(newTrackMap.sharedTrackMap());
+    newTrackMap.setIsReset(reset);
+
+    tx.push(new AddStaveSharingChange(sharedPart, seg->tick(), newTrackMap));
+
+    seg->triggerLayout();
+
+    LOGI() << "ADD!";
+}
+
+void EditStaveSharing::setTrackMapping(Transaction& tx, Segment* seg, track_idx_t track, track_idx_t originTrack, track_idx_t sharedTrack)
+{
+    Score* score = seg ? seg->score() : nullptr;
+    Staff* staff = score ? score->staff(track2staff(track)) : nullptr;
+    Part* part = staff ? staff->part() : nullptr;
+    IF_ASSERT_FAILED(part && part->isSharedPart()) {
+        return;
+    }
+    SharedPart* sharedPart = toSharedPart(part);
+
+    SharedTrackMapByTickEntry newTrackMap = sharedPart->trackMapAtTick(seg->tick());
+
+    SharedTrackMap map = newTrackMap.userTrackMap().value_or(newTrackMap.sharedTrackMap());
+    map[originTrack] = sharedTrack;
+    newTrackMap.setUserTrackMap(map);
+    newTrackMap.setIsReset(false);
+
+    tx.push(new AddStaveSharingChange(sharedPart, seg->tick(), newTrackMap));
+
+    seg->triggerLayout();
+}
+
+void EditStaveSharing::removeStaveSharingChange(Transaction& tx, StaveSharingChange* staveSharingChange)
+{
+    Part* part = staveSharingChange->part();
+    IF_ASSERT_FAILED(part->isSharedPart()) {
+        return;
+    }
+
+    SharedPart* sharedPart = toSharedPart(part);
+
+    tx.push(new RemoveStaveSharingChange(sharedPart, staveSharingChange->tick()));
+    staveSharingChange->triggerLayout();
 }

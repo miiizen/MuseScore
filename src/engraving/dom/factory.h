@@ -187,6 +187,7 @@ public:
     static std::shared_ptr<StaffTypeChange> makeStaffTypeChange(MeasureBase* parent);
 
     static StaffText* createStaffText(Segment* parent, TextStyleType textStyleType = TextStyleType::STAFF, bool isAccessibleEnabled = true);
+    static StaveSharingChange* createStaveSharingChange(Segment* parent, bool isAccessibleEnabled = true);
     static StaveSharingLabel* createStaveSharingLabel(Segment* parent, TextStyleType textStyleType = TextStyleType::STAVE_SHARING,
                                                       bool isAccessibleEnabled = true);
 

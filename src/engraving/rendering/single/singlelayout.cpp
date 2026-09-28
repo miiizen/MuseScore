@@ -82,6 +82,7 @@
 #include "dom/spacer.h"
 #include "dom/staff.h"
 #include "dom/stafftext.h"
+#include "dom/stavesharingchange.h"
 #include "dom/stafftypechange.h"
 #include "dom/sticking.h"
 #include "dom/stringtunings.h"
@@ -217,6 +218,8 @@ void SingleLayout::layoutItem(EngravingItem* item)
     case ElementType::SPACER:       layout(toSpacer(item), ctx);
         break;
     case ElementType::STAFF_TEXT:   layout(toStaffText(item), ctx);
+        break;
+    case ElementType::STAVE_SHARING_CHANGE: layout(toStaveSharingChange(item), ctx);
         break;
     case ElementType::STAVE_SHARING_LABEL: layout(toStaveSharingLabel(item), ctx);
         break;
@@ -1625,6 +1628,17 @@ void SingleLayout::layout(StaffText* item, const Context& ctx)
     }
 }
 
+void SingleLayout::layout(StaveSharingChange* item, const Context&)
+{
+    const FontMetrics metrics(item->font());
+    const RectF iconBox = metrics.boundingRect(item->iconCode());
+
+    Shape shape;
+    shape.add(iconBox, item);
+    item->mutldata()->setShape(shape);
+    item->mutldata()->setPos(PointF());
+}
+
 void SingleLayout::layout(StaveSharingLabel* item, const Context& ctx)
 {
     layoutTextBase(item, ctx, item->mutldata());
@@ -1886,7 +1900,7 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
         } else {
             trill->setPlacement(anchor == ArticulationAnchor::TOP ? PlacementV::ABOVE : PlacementV::BELOW);
         }
-        trill->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::STYLED); // Ensures that the property isn't written (it is written by the ornamnent)
+        trill->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::STYLED);     // Ensures that the property isn't written (it is written by the ornamnent)
     }
 
     if (item->isSingleType() || item->isBeginType()) {
@@ -2160,9 +2174,9 @@ static PolygonF createArrow(bool start, bool filled, PointF& startPoint, PointF&
 
     PolygonF arrow;
     if (start) {
-        arrow << PointF(0.0, -arrowHeight / 2) << PointF(-arrowWidth, 0.0) << PointF(0.0, arrowHeight / 2);  // left
+        arrow << PointF(0.0, -arrowHeight / 2) << PointF(-arrowWidth, 0.0) << PointF(0.0, arrowHeight / 2);     // left
     } else {
-        arrow << PointF(0.0, -arrowHeight / 2) << PointF(arrowWidth, 0.0) << PointF(0.0, arrowHeight / 2);  // right
+        arrow << PointF(0.0, -arrowHeight / 2) << PointF(arrowWidth, 0.0) << PointF(0.0, arrowHeight / 2);     // right
     }
 
     PointF arrowAdjust = PointF(arrowWidth, 0.0);
@@ -2342,7 +2356,7 @@ void SingleLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, const Co
                 break;
             }
         }
-        const double endTextX = std::max(pp2.x(), shape.bbox().right() + l2); // prevent end text from overlapping begin text
+        const double endTextX = std::max(pp2.x(), shape.bbox().right() + l2);     // prevent end text from overlapping begin text
         item->endText()->mutldata()->setPosX(endTextX);
         shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()), item);
     }
@@ -2442,7 +2456,7 @@ void SingleLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, const Co
         }
 
         ldata->points[ldata->npoints++] = pp1;
-        PointF& pp22 = ldata->points[ldata->npoints++] = pp2; // Keep a reference so that we can modify later
+        PointF& pp22 = ldata->points[ldata->npoints++] = pp2;     // Keep a reference so that we can modify later
 
         if (endHook) {
             const PointF endHookEndpoint = PointF(pp2.x() + endHookWidth, pp2.y() + endHookHeight);

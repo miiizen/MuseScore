@@ -279,7 +279,7 @@ void ScoreHorizontalViewLayout::layoutSystemLockIndicators(System* system)
         lockIndicator->setTrack(0);
         lockIndicator->setOwnershipParent(system);
         system->addSystemLockIndicator(lockIndicator);
-        TLayout::layoutIndicatorIcon(lockIndicator, lockIndicator->mutldata());
+        TLayout::layoutSystemIndicatorIcon(lockIndicator, lockIndicator->mutldata());
     }
 }
 

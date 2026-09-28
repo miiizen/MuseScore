@@ -534,7 +534,7 @@ void SystemLayout::layoutSystemLockIndicators(System* system, LayoutContext& ctx
     lockIndicator->setOwnershipParent(system);
     system->addSystemLockIndicator(lockIndicator);
 
-    TLayout::layoutIndicatorIcon(lockIndicator, lockIndicator->mutldata());
+    TLayout::layoutSystemIndicatorIcon(lockIndicator, lockIndicator->mutldata());
 }
 
 void SystemLayout::layoutPageLockIndicators(System* system)
@@ -1419,6 +1419,10 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
         TLayout::layoutItem(image, ctx);
     }
 
+    for (StaveSharingChange* ssc : elementsToLayout.staveSharingChanges) {
+        TLayout::layoutItem(ssc, ctx);
+    }
+
     layoutParenthesisAndBigTimeSigs(elementsToLayout);
 }
 
@@ -1556,6 +1560,9 @@ void SystemLayout::collectElementsToLayout(Measure* measure, ElementsToLayout& e
             case ElementType::STAFF_TEXT:
             case ElementType::STAVE_SHARING_LABEL:
                 elements.staffText.push_back(toStaffTextBase(item));
+                break;
+            case ElementType::STAVE_SHARING_CHANGE:
+                elements.staveSharingChanges.push_back(toStaveSharingChange(item));
                 break;
             case ElementType::INSTRUMENT_CHANGE:
                 elements.instrChanges.push_back(toInstrumentChange(item));
