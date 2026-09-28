@@ -1769,7 +1769,7 @@ const UiActionList NotationUiActions::s_actions = {
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Stave sharing change"),
              TranslatableString("action", "Insert stave sharing change"),
-             IconCode::Code::STAVE_SHARING_CHANGE
+             IconCode::Code::MUSESCORE_COM_LOGO
              ),
     UiAction("reset-stave-sharing-change",
              mu::context::UiCtxProjectOpened,

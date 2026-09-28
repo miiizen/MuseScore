@@ -3820,6 +3820,8 @@ void TLayout::layoutStaveSharingChange(const StaveSharingChange* item, Indicator
     shape.add(iconBox, item);
     ldata->setShape(shape);
     ldata->setPos(PointF(0.0, -item->spatium()));
+
+    Autoplace::autoplaceSegmentElement(item, ldata, false);
 }
 
 static void _layoutLedgerLine(const LedgerLine* item, const LayoutContext& ctx, LedgerLine::LayoutData* ldata)

@@ -74,6 +74,7 @@ class StaveSharingChangePopupModel : public AbstractElementPopupModel
     Q_OBJECT
 
     Q_PROPERTY(QString sharedPartName READ sharedPartName NOTIFY sharedPartNameChanged)
+    Q_PROPERTY(bool isUserMapValid READ isUserMapValid NOTIFY isUserMapValidChanged)
     Q_PROPERTY(bool resetToDefault READ resetToDefault WRITE setResetToDefault NOTIFY resetToDefaultChanged)
     Q_PROPERTY(QList<TrackMappingItem*> trackMappings READ trackMappings NOTIFY trackMappingsChanged)
     Q_PROPERTY(QVariantList staveOptions READ staveOptions NOTIFY staveOptionsChanged)
@@ -85,6 +86,7 @@ public:
     explicit StaveSharingChangePopupModel(QObject* parent = nullptr);
 
     QString sharedPartName() const;
+    bool isUserMapValid() const;
     bool resetToDefault() const;
     QList<TrackMappingItem*> trackMappings() const;
     QVariantList staveOptions() const;
@@ -99,6 +101,7 @@ public slots:
 
 signals:
     void sharedPartNameChanged();
+    void isUserMapValidChanged();
     void resetToDefaultChanged();
     void trackMappingsChanged();
     void staveOptionsChanged();

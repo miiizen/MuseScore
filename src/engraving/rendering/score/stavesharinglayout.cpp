@@ -118,41 +118,105 @@ void StaveSharingLayout::updateStaveSharing(StaveSharingContext& ctx)
     }
 }
 
+bool StaveSharingLayout::isValid(SharedTrackMap userMap, StaveSharingLayout::StaveSharingContext& ctx)
+{
+    // Make sure that the origin tracks which are mapped to shared tracks can be combined
+
+    // Group origin tracks by the shared track they map to
+    std::map<track_idx_t, TrackGroup> originTracksBySharedTrack;
+    for (const auto& [originTrack, sharedTrack] : userMap) {
+        originTracksBySharedTrack[sharedTrack].push_back(originTrack);
+    }
+
+    track_idx_t prevSharedTrack = muse::nidx;
+    track_idx_t lastTrackOnPrevVoice = muse::nidx;
+    for (const auto& [sharedTrack, originTracks] : originTracksBySharedTrack) {
+        if (originTracks.size() <= 1) {
+            continue;
+        }
+        // Origin tracks mapped to the same shared track must be able to go in the same voice
+        TrackGroup curTrackGroup = { originTracks.front() };
+        std::unordered_set<Note*> localUnisonNotes;
+        for (size_t i = 1; i < originTracks.size(); ++i) {
+            if (!canGoToSameVoice(originTracks[i - 1], originTracks[i], ctx, curTrackGroup, localUnisonNotes)) {
+                return false;
+            }
+            curTrackGroup.push_back(originTracks[i]);
+        }
+
+        // Voices on the same shared stave must be able to go on the same stave
+        bool sameStaveAsPrev = prevSharedTrack != muse::nidx && track2staff(prevSharedTrack) == track2staff(sharedTrack);
+        if (sameStaveAsPrev && !canGoToSameStave(lastTrackOnPrevVoice, originTracks.front(), ctx)) {
+            return false;
+        }
+
+        prevSharedTrack = sharedTrack;
+        lastTrackOnPrevVoice = originTracks.back();
+    }
+
+    return true;
+}
+
 void StaveSharingLayout::updateTrackMaps(StaveSharingContext& ctx)
 {
+    // Loop through trackmaps between sTick and eTick
+    // A track map can be user modified or not
+    // Each track map has a range it applies to - the tick it's at up to the next track map or eTick
+    // For a userModified track map:
+    //. Check the userTrackMap is valid
+    //.   If it is valid:
+    //.     Copy this into the cached track map
+    //.   Else:
+    //.     Calculate the track map normally
+    // For a non-usermodified trackmap:
+    //.   Calculate the trackmap
+
     LOGI() << "==> updateTrackMaps " << ctx.sTick.toString() << " -> " << ctx.eTick.toString();
     const Fraction sTick = ctx.sTick;
     const Fraction eTick = ctx.eTick;
 
+    // COPY of data, can't manipulate it directly
     std::map<Fraction, SharedTrackMapByTickEntry> maps = ctx.curSharedPart->trackMapsBetweenTicks(ctx.sTick, ctx.eTick);
     for (auto it = maps.begin(); it != maps.end(); ++it) {
-        const SharedTrackMapByTickEntry& oldTrackMap = it->second;
-        if (oldTrackMap.isUserModified() && !oldTrackMap.isReset()) {
+        SharedTrackMapByTickEntry& oldTrackMapEntry = it->second;
+        LOGI() << "MAP: " << it->first.toString() << " user: " << it->second.isUserModified();
+        const bool valid = isValid(oldTrackMapEntry.userTrackMap().value_or(SharedTrackMap()), ctx);
+        oldTrackMapEntry.setIsUserMapValid(valid);
+        if (oldTrackMapEntry.isUserModified() && !oldTrackMapEntry.isReset() && valid) {
+            LOGI() << "User modified track is valid";
+            // Set cached map to user map
+            if (oldTrackMapEntry.sharedTrackMap() != oldTrackMapEntry.userTrackMap().value_or(SharedTrackMap())) {
+                ctx.trackMapChanged = true;
+            }
+            oldTrackMapEntry.setSharedTrackMap(oldTrackMapEntry.userTrackMap().value());
+            ctx.curSharedPart->removeMapAtTick(it->first);
+            ctx.curSharedPart->setTrackMapAtTick(oldTrackMapEntry, it->first);
             continue;
         }
 
         auto nextIt = std::next(it);
         ctx.sTick = it->first;
         ctx.eTick = (nextIt != maps.end()) ? nextIt->first : eTick;
-        LOGI() << "MAP: " << ctx.sTick.toString() << " -> " << ctx.eTick.toString() << ": " << dump(oldTrackMap.sharedTrackMap()) <<
-            " userMod: " << oldTrackMap.isUserModified();
+
+        LOGI() << "Compute track map";
 
         // Compute track map up to end of region to be updated or next user track map
-        SharedTrackMapByTickEntry newTrackMap = computeTrackMap(ctx);
-        newTrackMap.setIsUserModified(oldTrackMap.isUserModified());
-        newTrackMap.setIsReset(oldTrackMap.isReset());
-        if (newTrackMap != oldTrackMap) {
+        SharedTrackMap newTrackMap = computeTrackMap(ctx);
+        if (newTrackMap != oldTrackMapEntry.sharedTrackMap()) {
+            LOGI() << "Track map changed";
             ctx.trackMapChanged = true;
         }
+        // Copy, so won't be deleted by removeMapsBetweenTicks
+        oldTrackMapEntry.setSharedTrackMap(newTrackMap);
         ctx.curSharedPart->removeMapsBetweenTicks(ctx.sTick, ctx.eTick, false);
-        ctx.curSharedPart->setTrackMapAtTick(newTrackMap, ctx.sTick);
+        ctx.curSharedPart->setTrackMapAtTick(oldTrackMapEntry, ctx.sTick);
     }
 
     ctx.sTick = sTick;
     ctx.eTick = eTick;
 }
 
-SharedTrackMapByTickEntry StaveSharingLayout::computeTrackMap(StaveSharingContext& ctx)
+SharedTrackMap StaveSharingLayout::computeTrackMap(StaveSharingContext& ctx)
 {
     SharedPart* p = ctx.curSharedPart;
 
@@ -253,7 +317,7 @@ SharedTrackMapByTickEntry StaveSharingLayout::computeTrackMap(StaveSharingContex
         track2voice(curSharedTrack) == 0 ? ++curSharedTrack : curSharedTrack = trackZeroVoice(curSharedTrack + VOICES);
     }
 
-    return SharedTrackMapByTickEntry(trackMap);
+    return trackMap;
 }
 
 bool StaveSharingLayout::isEmpty(track_idx_t track, StaveSharingContext& ctx)
@@ -869,6 +933,7 @@ void StaveSharingLayout::makeSharedChordRests(StaveSharingContext& ctx)
 
     for (Segment* seg : ctx.crSegmentsToUpdate) {
         for (const auto& [originTrack, sharedTrack] : ctx.curTrackMap(seg->tick()).sharedTrackMap()) {
+            LOGI() << "TRACKMAP " << originTrack << " -> " << sharedTrack;
             ChordRest* originCR = toChordRest(seg->element(originTrack));
             if (!originCR) {
                 continue;

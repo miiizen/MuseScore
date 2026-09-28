@@ -352,7 +352,7 @@ void EditStaveSharing::addStaveSharingChange(Transaction& tx, Segment* seg, trac
 
     // Use current state to initialise map
     SharedTrackMapByTickEntry newTrackMap = sharedPart->trackMapAtTick(seg->tick());
-    newTrackMap.setIsUserModified(true);
+    newTrackMap.setUserTrackMap(newTrackMap.sharedTrackMap());
     newTrackMap.setIsReset(reset);
 
     tx.push(new AddStaveSharingChange(sharedPart, seg->tick(), newTrackMap));
@@ -373,10 +373,10 @@ void EditStaveSharing::setTrackMapping(Transaction& tx, Segment* seg, track_idx_
     SharedPart* sharedPart = toSharedPart(part);
 
     SharedTrackMapByTickEntry newTrackMap = sharedPart->trackMapAtTick(seg->tick());
-    SharedTrackMap map = newTrackMap.sharedTrackMap();
+
+    SharedTrackMap map = newTrackMap.userTrackMap().value_or(newTrackMap.sharedTrackMap());
     map[originTrack] = sharedTrack;
-    newTrackMap.setSharedTrackMap(map);
-    newTrackMap.setIsUserModified(true);
+    newTrackMap.setUserTrackMap(map);
     newTrackMap.setIsReset(false);
 
     tx.push(new AddStaveSharingChange(sharedPart, seg->tick(), newTrackMap));

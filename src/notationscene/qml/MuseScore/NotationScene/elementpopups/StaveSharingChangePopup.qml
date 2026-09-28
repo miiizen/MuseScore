@@ -86,6 +86,16 @@ AbstractElementPopup {
             horizontalAlignment: Text.AlignLeft
         }
 
+        StyledTextLabel {
+            id: userMapValidWarning
+
+            text: qsTrc("notation", "This stave configuration is invalid")
+            font: ui.theme.bodyFont
+            horizontalAlignment: Text.AlignLeft
+
+            visible: !popupModel.isUserMapValid
+        }
+
         SeparatorLine {}
 
         ToggleButton {

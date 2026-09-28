@@ -92,6 +92,17 @@ QString StaveSharingChangePopupModel::sharedPartName() const
     return m_item->part()->partName().toQString();
 }
 
+bool StaveSharingChangePopupModel::isUserMapValid() const
+{
+    if (!m_item) {
+        return false;
+    }
+
+    StaveSharingChange* change = toStaveSharingChange(m_item);
+
+    return change->trackMap() && change->trackMap()->isUserMapValid();
+}
+
 bool StaveSharingChangePopupModel::resetToDefault() const
 {
     if (!m_item) {
@@ -177,7 +188,7 @@ void StaveSharingChangePopupModel::refreshTrackMappingItems()
     }
 
     StaveSharingChange* change = toStaveSharingChange(m_item);
-    const SharedTrackMap& map = change->trackMap()->sharedTrackMap();
+    const SharedTrackMap map = change->trackMap()->userTrackMap().value_or(SharedTrackMap());
 
     staff_idx_t sharedFirstStaff = track2staff(part->trackRange().startTrack);
 
@@ -282,6 +293,7 @@ void StaveSharingChangePopupModel::init()
     AbstractElementPopupModel::init();
 
     emit sharedPartNameChanged();
+    emit isUserMapValidChanged();
     emit resetToDefaultChanged();
 
     refreshTrackMappingItems();

@@ -21,6 +21,8 @@
  */
 #pragma once
 
+#include <optional>
+
 #include "part.h"
 
 namespace mu::engraving {
@@ -30,29 +32,43 @@ std::string dump(const SharedTrackMap& map);
 
 struct SharedTrackMapByTickEntry {
     SharedTrackMapByTickEntry() {}
-    SharedTrackMapByTickEntry(SharedTrackMap trackMap, bool isUserModified = false)
-        : m_sharedTrackMap(trackMap), m_isUserModified(isUserModified) {}
+    SharedTrackMapByTickEntry(SharedTrackMap trackMap)
+        : m_sharedTrackMap(trackMap) {}
 
-    const SharedTrackMap& sharedTrackMap() const { return m_sharedTrackMap; }
-    void setSharedTrackMap(SharedTrackMap map) { m_sharedTrackMap = map; }
+    // User data
+    const std::optional<SharedTrackMap>& userTrackMap() const { return m_userTrackMap; }
+    void setUserTrackMap(std::optional<SharedTrackMap> map) { m_userTrackMap = map; }
 
-    void setIsUserModified(bool val) { m_isUserModified = val; }
-    bool isUserModified() const { return m_isUserModified; }
+    bool isUserModified() const { return m_userTrackMap.has_value(); }
 
     void setIsReset(bool val) { m_isReset = val; }
     bool isReset() const { return m_isReset; }
 
+    // Data calculated at layout
+    const SharedTrackMap& sharedTrackMap() const { return m_sharedTrackMap; }
+    void setSharedTrackMap(SharedTrackMap map) { m_sharedTrackMap = map; }
+
+    void setIsUserMapValid(bool val) { m_isUserMapValid = val; }
+    bool isUserMapValid() const { return m_isUserMapValid; }
+
     bool operator==(const SharedTrackMapByTickEntry& other) const
     {
-        return m_sharedTrackMap == other.m_sharedTrackMap && m_isUserModified == other.m_isUserModified;
+        return m_sharedTrackMap == other.m_sharedTrackMap
+               && m_userTrackMap == other.m_userTrackMap
+               && m_isReset == other.m_isReset
+               && m_isUserMapValid == other.m_isUserMapValid;
     }
 
     bool operator!=(const SharedTrackMapByTickEntry& other) const { return !(*this == other); }
 
 private:
-    SharedTrackMap m_sharedTrackMap;
-    bool m_isUserModified = false;
+    // User data
+    std::optional<SharedTrackMap> m_userTrackMap;
     bool m_isReset = false;
+
+    // Data calculated at layout
+    SharedTrackMap m_sharedTrackMap;
+    bool m_isUserMapValid = false;
 };
 
 class SharedPart final : public Part

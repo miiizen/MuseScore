@@ -64,7 +64,9 @@ private:
     static void updateStaveSharing(StaveSharingContext& ctx);
 
     static void updateTrackMaps(StaveSharingContext& ctx);
-    static SharedTrackMapByTickEntry computeTrackMap(StaveSharingContext& ctx);
+    static SharedTrackMap computeTrackMap(StaveSharingContext& ctx);
+
+    static bool isValid(SharedTrackMap userMap, StaveSharingLayout::StaveSharingContext& ctx);
 
     static bool isEmpty(track_idx_t track, StaveSharingContext& ctx);
 

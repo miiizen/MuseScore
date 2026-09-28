@@ -28,15 +28,24 @@
 
 using namespace mu::engraving;
 
+static const ElementStyle staveSharingChangeStyle {
+    { Sid::staveSharingChangeMinDistance, Pid::MIN_DISTANCE },
+};
+
 StaveSharingChange::StaveSharingChange(Segment* parent)
-    : IndicatorIcon(ElementType::STAVE_SHARING_CHANGE, parent, ElementFlag::GENERATED)
+    : IndicatorIcon(ElementType::STAVE_SHARING_CHANGE, parent, ElementFlag::GENERATED | ElementFlag::PLACE_ABOVE)
 {
+    initElementStyle(&staveSharingChangeStyle);
 }
 
 char16_t StaveSharingChange::iconCode() const
 {
     if (trackMap() && trackMap()->isReset()) {
         return 0xEF19;
+    }
+
+    if (trackMap() && !trackMap()->isUserMapValid()) {
+        return 0xF3CE;
     }
 
     // TODO: placeholder icon, to be replaced once the stave-sharing-change glyph is decided
