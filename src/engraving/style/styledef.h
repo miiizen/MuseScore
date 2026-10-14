@@ -99,6 +99,8 @@ enum class Sid : short {
     sharedOnStaffNumeralsHyphenThreshold,
     staveSharingInstrChangePlayerNum,
 
+    staveSharingChangeMinDistance,
+
     windsNameByGroup,
     vocalsNameByGroup,
     stringsNameByGroup,
@@ -140,6 +142,9 @@ enum class Sid : short {
     lyricsMelismaMinLength,
     lyricsDashPosAtStartOfSystem,
     lyricsAvoidBarlines,
+    lyricsAutoCenterOnGrandStaff,
+    lyricsAutoCenterOnVocalStaves,
+    lyricsStackingOrder,
     lyricsLimitDashCount,
     lyricsMaxDashCount,
     lyricsCenterDashedSyllables,
@@ -814,6 +819,7 @@ enum class Sid : short {
 
     dynamicsHairpinVoiceBasedPlacement,
     dynamicsHairpinsAutoCenterOnGrandStaff,
+    dynamicsHairpinsAutoCenterOnVocalStaves,
     dynamicsHairpinsAboveForVocalStaves,
 
     dynamicsOverrideFont,

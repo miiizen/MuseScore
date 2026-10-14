@@ -720,7 +720,7 @@ void TWrite::write(const Accidental* item, XmlWriter& xml, WriteContext& ctx)
 void TWrite::write(const ActionIcon* item, XmlWriter& xml, WriteContext&)
 {
     xml.startElement(item);
-    xml.tag("action", String::fromStdString(item->actionCode()));
+    xml.tag("action", TConv::toXml(item->actionType()));
     xml.endElement();
 }
 
@@ -824,9 +824,7 @@ void TWrite::writeProperties(const Articulation* item, XmlWriter& xml, WriteCont
 
     writeProperty(item, xml, Pid::PLAY);
     writeProperty(item, xml, Pid::ORNAMENT_STYLE);
-    for (const StyledProperty& spp : *item->styledProperties()) {
-        writeProperty(item, xml, spp.pid);
-    }
+    writeStyledProperties(item, xml);
     writeItemProperties(item, xml, ctx);
 }
 
@@ -1301,7 +1299,9 @@ void TWrite::write(const Clef* item, XmlWriter& xml, WriteContext& ctx)
     writeProperty(item, xml, Pid::CLEF_TYPE_CONCERT);
     writeProperty(item, xml, Pid::CLEF_TYPE_TRANSPOSING);
     writeProperty(item, xml, Pid::CLEF_TO_BARLINE_POS);
-    writeProperty(item, xml, Pid::IS_HEADER);
+    if (item->isHeader()) {
+        xml.tag("isHeader", true);
+    }
     writeProperty(item, xml, Pid::IS_COURTESY);
     if (!item->showCourtesy()) {
         xml.tag("showCourtesyClef", item->showCourtesy());
@@ -1379,11 +1379,8 @@ void TWrite::writeProperties(const TextBase* item, XmlWriter& xml, WriteContext&
     writeProperty(item, xml, Pid::TEXT_STYLE);
     writeItemProperties(item, xml, ctx);
 
-    for (const StyledProperty& spp : *item->styledProperties()) {
-        if (!item->isStyled(spp.pid)) {
-            writeProperty(item, xml, spp.pid);
-        }
-    }
+    writeStyledProperties(item, xml);
+
     for (const auto& spp : *textStyle(item->textStyleType())) {
         if (item->isStyled(spp.pid)
             || (spp.pid == Pid::FONT_SIZE && item->getProperty(spp.pid).toDouble() == TextBase::UNDEFINED_FONT_SIZE)
@@ -1437,9 +1434,7 @@ void TWrite::write(const FiguredBass* item, XmlWriter& xml, WriteContext& ctx)
         for (FiguredBassItem* fBItem : item->items()) {
             write(fBItem, xml, ctx);
         }
-        for (const StyledProperty& spp : *item->styledProperties()) {
-            writeProperty(item, xml, spp.pid);
-        }
+        writeStyledProperties(item, xml);
         writeItemProperties(item, xml, ctx);
     }
     xml.endElement();
@@ -1578,9 +1573,6 @@ void TWrite::write(const Glissando* item, XmlWriter& xml, WriteContext& ctx)
     for (auto id : { Pid::GLISS_SHIFT, Pid::GLISS_EASEIN, Pid::GLISS_EASEOUT }) {
         writeProperty(item, xml, id);
     }
-    for (const StyledProperty& spp : *item->styledProperties()) {
-        writeProperty(item, xml, spp.pid);
-    }
 
     writeProperties(static_cast<const SLine*>(item), xml, ctx);
     xml.endElement();
@@ -1641,23 +1633,17 @@ void TWrite::writeProperties(const SLine* item, XmlWriter& xml, WriteContext& ct
     if (item->diagonal()) {
         xml.tag("diagonal", item->diagonal());
     }
-    writeProperty(item, xml, Pid::LINE_WIDTH);
-    writeProperty(item, xml, Pid::LINE_STYLE);
-    writeProperty(item, xml, Pid::DASH_LINE_LEN);
-    writeProperty(item, xml, Pid::DASH_GAP_LEN);
 
-    // TO PREVENT CRASH IN VERSIONS <4.6.5
-    if (item->score()->isPaletteScore()) {
-        const double COMPAT_SCALE = 0.5;
-        // when used as icon
-        if (!item->spannerSegments().empty()) {
-            const LineSegment* s = item->frontSegment();
-            xml.tag("length", s->pos2().x() * COMPAT_SCALE);
-        } else {
-            xml.tag("length", item->spatium() * 4 * COMPAT_SCALE);
+    for (Pid pid : { Pid::LINE_WIDTH,
+                     Pid::LINE_STYLE,
+                     Pid::DASH_LINE_LEN,
+                     Pid::DASH_GAP_LEN }) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
+            writeProperty(item, xml, pid);
         }
-        return;
     }
+
+    writeStyledProperties(item, xml);
 
     if (!item->isUserModified()) {
         return;
@@ -1718,11 +1704,14 @@ void TWrite::writeProperties(const Spanner* item, XmlWriter& xml, WriteContext& 
 void TWrite::write(const GradualTempoChange* item, XmlWriter& xml, WriteContext& ctx)
 {
     xml.startElement(item);
-    writeProperty(item, xml, Pid::TEMPO_CHANGE_TYPE);
-    writeProperty(item, xml, Pid::TEMPO_EASING_METHOD);
-    writeProperty(item, xml, Pid::TEMPO_CHANGE_FACTOR);
-    writeProperty(item, xml, Pid::PLACEMENT);
-    writeProperty(item, xml, Pid::SNAP_AFTER);
+    for (Pid pid : { Pid::TEMPO_CHANGE_TYPE,
+                     Pid::TEMPO_EASING_METHOD,
+                     Pid::TEMPO_CHANGE_FACTOR,
+                     Pid::SNAP_AFTER }) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
+            writeProperty(item, xml, pid);
+        }
+    }
     writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
     xml.endElement();
 }
@@ -1730,7 +1719,7 @@ void TWrite::write(const GradualTempoChange* item, XmlWriter& xml, WriteContext&
 void TWrite::writeProperties(const TextLineBase* item, XmlWriter& xml, WriteContext& ctx)
 {
     for (Pid pid : TextLineBase::textLineBasePropertyIds()) {
-        if (!item->isStyled(pid)) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
             writeProperty(item, xml, pid);
         }
     }
@@ -1754,20 +1743,22 @@ void TWrite::write(const Hairpin* item, XmlWriter& xml, WriteContext& ctx)
     }
     xml.startElement(item);
     xml.tag("subtype", int(item->hairpinType()));
-    writeProperty(item, xml, Pid::VELO_CHANGE);
-    writeProperty(item, xml, Pid::HAIRPIN_CIRCLEDTIP);
-    writeProperty(item, xml, Pid::SINGLE_NOTE_DYNAMICS);
-    writeProperty(item, xml, Pid::VELO_CHANGE_METHOD);
 
-    writeProperty(item, xml, Pid::VOICE_ASSIGNMENT);
-    writeProperty(item, xml, Pid::DIRECTION);
-    writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
-
-    writeProperty(item, xml, Pid::SNAP_BEFORE);
-    writeProperty(item, xml, Pid::SNAP_AFTER);
-
-    writeProperty(item, xml, Pid::HAIRPIN_HEIGHT);
-    writeProperty(item, xml, Pid::HAIRPIN_CONT_HEIGHT);
+    for (Pid pid : { Pid::VELO_CHANGE,
+                     Pid::HAIRPIN_CIRCLEDTIP,
+                     Pid::SINGLE_NOTE_DYNAMICS,
+                     Pid::VELO_CHANGE_METHOD,
+                     Pid::VOICE_ASSIGNMENT,
+                     Pid::DIRECTION,
+                     Pid::CENTER_BETWEEN_STAVES,
+                     Pid::SNAP_BEFORE,
+                     Pid::SNAP_AFTER,
+                     Pid::HAIRPIN_HEIGHT,
+                     Pid::HAIRPIN_CONT_HEIGHT }) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
+            writeProperty(item, xml, pid);
+        }
+    }
 
     writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
     xml.endElement();
@@ -2397,6 +2388,7 @@ void TWrite::write(const Lyrics* item, XmlWriter& xml, WriteContext& ctx)
         xml.tag("syllabic", TConv::toXml(item->syllabic()));
     }
     writeProperty(item, xml, Pid::LYRIC_TICKS);
+    writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
 
     writeProperties(toTextBase(item), xml, ctx, true);
     if (item->separator() && !item->separator()->generated()) {
@@ -2583,11 +2575,11 @@ void TWrite::write(const Ottava* item, XmlWriter& xml, WriteContext& ctx)
         return;
     }
     xml.startElement(item);
-    writeProperty(item, xml, Pid::OTTAVA_TYPE);
-    writeProperty(item, xml, Pid::PLACEMENT);
-    writeProperty(item, xml, Pid::NUMBERS_ONLY);
-//      for (const StyledProperty& spp : *styledProperties())
-//            writeProperty(xml, spp.pid);
+    for (Pid pid : { Pid::OTTAVA_TYPE, Pid::NUMBERS_ONLY }) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
+            writeProperty(item, xml, pid);
+        }
+    }
     writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
     xml.endElement();
 }
@@ -2644,6 +2636,21 @@ void TWrite::write(const Part* item, XmlWriter& xml, WriteContext& ctx)
     xml.endElement();
 }
 
+static void writeStaveSharingState(const StaveSharingState& state, const Fraction& tick, XmlWriter& xml)
+{
+    if (!state.isUserModified()) {
+        return;
+    }
+    xml.startElement("StaveSharingState", { { "tick", tick.toString() } });
+    if (state.isReset()) {
+        xml.tag("isReset", state.isReset());
+    }
+    for (const auto& [originTrack, sharedTrack] : state.userTrackMap().value()) {
+        xml.tag("trackMap", { { "origin", originTrack }, { "shared", sharedTrack } });
+    }
+    xml.endElement();
+}
+
 void TWrite::write(const SharedPart* item, XmlWriter& xml, WriteContext& ctx)
 {
     xml.startElement(item, { { "id", item->id().toUint64() } });
@@ -2651,6 +2658,12 @@ void TWrite::write(const SharedPart* item, XmlWriter& xml, WriteContext& ctx)
     writeItemEid(item, xml);
 
     xml.tag(propertyName(Pid::SHARED_PART_ENABLED), item->getProperty(Pid::SHARED_PART_ENABLED).toBool());
+
+    const Fraction& endTick = item->score()->endTick();
+
+    for (const auto& [tick, state] : item->staveSharingStatesBetweenTicks(Fraction(0, 1), endTick)) {
+        writeStaveSharingState(state, tick, xml);
+    }
 
     writeProperties(item, xml, ctx);
 
@@ -2684,10 +2697,6 @@ void TWrite::writeProperties(const Part* item, XmlWriter& xml, WriteContext& ctx
         xml.tag("soloist", item->soloist());
     }
 
-    if (item->color() != Part::DEFAULT_COLOR) {
-        xml.tag("color", item->color());
-    }
-
     if (item->hideWhenEmpty() != AutoOnOff::AUTO) {
         xml.tag("hideWhenEmpty", TConv::toXml(item->hideWhenEmpty()));
     }
@@ -2704,7 +2713,7 @@ void TWrite::writeProperties(const Part* item, XmlWriter& xml, WriteContext& ctx
             xml.tag("preferSharpFlat", "flats");
             break;
         case PreferSharpFlat::SHARPS:
-            xml.tag("preferSharpFlat", "flats");
+            xml.tag("preferSharpFlat", "sharps");
             break;
         case PreferSharpFlat::NONE:
             xml.tag("preferSharpFlat", "none");
@@ -2732,7 +2741,11 @@ void TWrite::write(const PartialLyricsLine* item, XmlWriter& xml, WriteContext& 
         return;
     }
     xml.startElement(item);
-    writeProperty(item, xml, Pid::VERSE);
+    for (Pid pid : { Pid::VERSE, Pid::CENTER_BETWEEN_STAVES }) {
+        if (item->propertyFlags(pid) == PropertyFlags::NOSTYLE) {
+            writeProperty(item, xml, pid);
+        }
+    }
     xml.tag("isEndMelisma", item->isEndMelisma());
     writeProperties(static_cast<const SLine*>(item), xml, ctx);
     xml.endElement();
@@ -3123,6 +3136,8 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
     if (item->group() == StaffGroup::STANDARD) {
         xml.tag("noteheadScheme", TConv::toXml(item->noteHeadScheme()), TConv::toXml(NoteHeadScheme::HEAD_NORMAL));
     }
+    xml.tag("instrumentLabelVisibility", TConv::toXml(item->instrumentLabelVisibility()),
+            TConv::toXml(InstrumentLabelVisibility::AUTO));
     if (item->group() == StaffGroup::STANDARD || item->group() == StaffGroup::PERCUSSION) {
         if (!item->genKeysig()) {
             xml.tag("keysig", item->genKeysig());
@@ -3380,9 +3395,6 @@ void TWrite::write(const TextLine* item, XmlWriter& xml, WriteContext& ctx)
     } else {
         xml.startElement(item);
     }
-    // other styled properties are included in TextLineBase pids list
-    writeProperty(item, xml, Pid::PLACEMENT);
-    writeProperty(item, xml, Pid::OFFSET);
     writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
     xml.endElement();
 }
@@ -3487,9 +3499,12 @@ void TWrite::write(const Trill* item, XmlWriter& xml, WriteContext& ctx)
     }
     xml.startElement(item);
     xml.tag("subtype", TConv::toXml(item->trillType()));
-    writeProperty(item, xml, Pid::ORNAMENT_STYLE);
-    writeProperty(item, xml, Pid::PLACEMENT);
+
+    if (item->propertyFlags(Pid::ORNAMENT_STYLE) == PropertyFlags::NOSTYLE) {
+        writeProperty(item, xml, Pid::ORNAMENT_STYLE);
+    }
     writeProperties(static_cast<const SLine*>(item), xml, ctx);
+
     if (item->ornament()) {
         write(item->ornament(), xml, ctx);
     }
@@ -3530,9 +3545,6 @@ void TWrite::write(const Vibrato* item, XmlWriter& xml, WriteContext& ctx)
     }
     xml.startElement(item);
     xml.tag("subtype", TConv::toXml(item->vibratoType()));
-    for (const StyledProperty& spp : *item->styledProperties()) {
-        writeProperty(item, xml, spp.pid);
-    }
     writeProperties(static_cast<const SLine*>(item), xml, ctx);
     xml.endElement();
 }
@@ -3601,7 +3613,7 @@ static bool writeVoiceMove(XmlWriter& xml, WriteContext& ctx, Segment* seg, cons
 static void writeTimeSig(Score* score, const Fraction& tick, XmlWriter& xml, WriteContext& ctx)
 {
     Fraction tsf = score->sigmap()->timesig(tick).nominal();
-    TimeSig* ts = Factory::createTimeSig(score->dummy()->segment());
+    TimeSig* ts = Factory::createTimeSig(score->dummy());
     ts->setSig(tsf);
     TWrite::write(ts, xml, ctx);
     ts->masterScore()->eidRegister()->removeItem(ts);
@@ -3733,7 +3745,7 @@ void TWrite::writeSegments(XmlWriter& xml, WriteContext& ctx, track_idx_t strack
                 if (!keySigWritten) {
                     Key ck = score->staff(track2staff(track))->concertKey(segment->tick());
                     Key tk = score->staff(track2staff(track))->key(segment->tick());
-                    KeySig* ks = Factory::createKeySig(score->dummy()->segment());
+                    KeySig* ks = Factory::createKeySig(score->dummy());
                     ks->setKey(ck, tk);
                     TWrite::write(ks, xml, ctx);
                     ks->masterScore()->eidRegister()->removeItem(ks);

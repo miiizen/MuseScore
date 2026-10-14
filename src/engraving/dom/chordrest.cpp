@@ -61,6 +61,7 @@
 #include "editing/editkeysig.h"
 #include "editing/editrehearsalmark.h"
 #include "editing/navigation.h"
+#include "editing/editstavesharing.h"
 #include "editing/splitjoinmeasure.h"
 #include "editing/transaction/transaction.h"
 #include "editing/transpose.h"
@@ -77,7 +78,7 @@ namespace mu::engraving {
 //   ChordRest
 //---------------------------------------------------------
 
-ChordRest::ChordRest(const ElementType& type, Segment* parent)
+ChordRest::ChordRest(const ElementType& type, DummyParentOr<Segment> parent)
     : DurationElement(type, parent)
 {
     m_staffMove    = 0;
@@ -186,6 +187,9 @@ bool ChordRest::acceptDrop(EditData& data) const
         case ActionIconType::BEAM_BREAK_INNER_16TH:
         case ActionIconType::BEAM_JOIN:
             return true;
+        case ActionIconType::STAVE_SHARING_CHANGE:
+        case ActionIconType::RESET_STAVE_SHARING_CHANGE:
+            return part() && part()->isSharedPart();
         default: break;
         }
         break;
@@ -314,7 +318,7 @@ EngravingItem* ChordRest::drop(Transaction& tx, EditData& data)
 
         Segment* seg = segment();
         score()->undoRemoveElement(this);
-        Chord* chord = Factory::createChord(score()->dummy()->segment());
+        Chord* chord = Factory::createChord(score()->dummy());
         chord->setTrack(track());
         chord->setDurationType(durationType());
         chord->setTicks(ticks());
@@ -351,9 +355,9 @@ EngravingItem* ChordRest::drop(Transaction& tx, EditData& data)
         if (e->isRehearsalMark() && fromPalette) {
             RehearsalMark* r = toRehearsalMark(e);
             r->setXmlText(EditRehearsalMark::createRehearsalMarkText(score(), r));
-        } else if (e->isHarpPedalDiagram() && fromPalette && part()) {
+        } else if (e->isHarpPedalDiagram() && fromPalette && originPart()) {
             // Match pedal config with previous diagram's
-            if (HarpPedalDiagram* prevDiagram = part()->prevHarpDiagram(segment()->tick())) {
+            if (HarpPedalDiagram* prevDiagram = originPart()->prevHarpDiagram(segment()->tick())) {
                 toHarpPedalDiagram(e)->setPedalState(prevDiagram->getPedalState());
             }
         }
@@ -383,7 +387,7 @@ EngravingItem* ChordRest::drop(Transaction& tx, EditData& data)
             score()->undoAddElement(ic);
 
             if (!fromPalette) {
-                ic->setupInstrument(&instr);
+                ic->setupInstrument(&instr, /*updateText*/ false);
             }
             return e;
         }
@@ -415,6 +419,12 @@ EngravingItem* ChordRest::drop(Transaction& tx, EditData& data)
         };
         if (muse::contains(beamModeTable, actionType)) {
             undoChangeProperty(Pid::BEAM_MODE, muse::value(beamModeTable, actionType));
+            delete e;
+            return nullptr;
+        }
+        if (actionType == ActionIconType::STAVE_SHARING_CHANGE || actionType == ActionIconType::RESET_STAVE_SHARING_CHANGE) {
+            bool reset = actionType == ActionIconType::RESET_STAVE_SHARING_CHANGE;
+            EditStaveSharing::addStaveSharingChange(tx, segment(), part(), reset);
             delete e;
             return nullptr;
         }
@@ -683,7 +693,10 @@ void ChordRest::undoChangeProperty(Pid id, const PropertyValue& newValue, Proper
 {
     if (id == Pid::BEAM_MODE) {
         if (isChord() && m_durationType.hooks() == 0) {
-            return;
+            const StaffType* tab = staffType();
+            if (!tab || !tab->isTabStaff() || !tab->genDurations()) {
+                return;
+            }
         }
         BeamMode newBeamMode = newValue.value<BeamMode>();
         if ((newBeamMode == BeamMode::BEGIN16 && m_durationType.hooks() < 2)
@@ -1288,23 +1301,6 @@ bool ChordRest::isBefore(const EngravingItem* o) const
     }
 
     return false;
-}
-
-//---------------------------------------------------------
-//   undoAddAnnotation
-//---------------------------------------------------------
-
-void ChordRest::undoAddAnnotation(EngravingItem* a)
-{
-    Segment* seg = segment();
-    Measure* m = measure();
-    if (m && m->isMMRest()) {
-        seg = m->mmRestFirst()->findSegmentR(SegmentType::ChordRest, Fraction(0, 1));
-    }
-
-    a->setTrack(/*a->systemFlag() ? 0 : */ track());
-    a->setOwnershipParent(seg);
-    score()->undoAddElement(a);
 }
 
 bool ChordRest::isBelowCrossBeam(const BeamBase* beamBase) const

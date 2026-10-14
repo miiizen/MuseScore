@@ -28,7 +28,7 @@
 #include "types/typesconv.h"
 #include "types/symnames.h"
 
-#include "compat/dummyelement.h"
+#include "dom/dummyparent.h"
 
 #include "dom/factory.h"
 
@@ -82,6 +82,7 @@
 #include "dom/spacer.h"
 #include "dom/staff.h"
 #include "dom/stafftext.h"
+#include "dom/stavesharingchange.h"
 #include "dom/stafftypechange.h"
 #include "dom/sticking.h"
 #include "dom/stringtunings.h"
@@ -218,6 +219,8 @@ void SingleLayout::layoutItem(EngravingItem* item)
         break;
     case ElementType::STAFF_TEXT:   layout(toStaffText(item), ctx);
         break;
+    case ElementType::STAVE_SHARING_CHANGE: layout(toStaveSharingChange(item), ctx);
+        break;
     case ElementType::STAVE_SHARING_LABEL: layout(toStaveSharingLabel(item), ctx);
         break;
     case ElementType::STAFFTYPE_CHANGE: layout(toStaffTypeChange(item), ctx);
@@ -312,7 +315,7 @@ std::shared_ptr<IEngravingFont> SingleLayout::Context::engravingFont() const
     return m_score->engravingFont();
 }
 
-compat::DummyElement* SingleLayout::Context::dummyParent() const
+DummyParent* SingleLayout::Context::dummyParent() const
 {
     return m_score->dummy();
 }
@@ -838,7 +841,6 @@ void SingleLayout::layoutGroupBracket(Bracket* item, const Context& ctx)
 
     if (!item->text()) {
         const_cast<Bracket*>(item)->setText(new Text(const_cast<Bracket*>(item)));
-        item->text()->setOwnershipParent(const_cast<Bracket*>(item));
     }
 
     Text* text = item->text();
@@ -1112,7 +1114,6 @@ void SingleLayout::layout(HammerOnPullOffSegment* item, const Context& ctx)
     }
 
     HammerOnPullOffText* hopoText = hopoTexts.front();
-    hopoText->setOwnershipParent(item);
     hopoText->setXmlText("H/P");
 
     Align align;
@@ -1625,6 +1626,17 @@ void SingleLayout::layout(StaffText* item, const Context& ctx)
     }
 }
 
+void SingleLayout::layout(StaveSharingChange* item, const Context&)
+{
+    const FontMetrics metrics(item->font());
+    const RectF iconBox = metrics.boundingRect(item->iconCode());
+
+    Shape shape;
+    shape.add(iconBox, item);
+    item->mutldata()->setShape(shape);
+    item->mutldata()->setPos(PointF());
+}
+
 void SingleLayout::layout(StaveSharingLabel* item, const Context& ctx)
 {
     layoutTextBase(item, ctx, item->mutldata());
@@ -1675,7 +1687,6 @@ void SingleLayout::layout(Tapping* item, const Context& ctx)
         text = new TappingText(item);
     }
 
-    text->setOwnershipParent(item);
     item->setText(text);
     text->setTrack(item->track());
     DO_ASSERT(item->hand() != TappingHand::INVALID);
@@ -1978,7 +1989,6 @@ void SingleLayout::layout(VoltaSegment* item, const Context& ctx)
     double hookHeight = item->absoluteFromSpatium(item->volta()->beginHookHeight());
     if (item->text()) {
         Text* text = item->text();
-        text->setOwnershipParent(item);
         RectF textBBox = text->ldata()->bbox().translated(text->pos());
         text->mutldata()->moveY(hookHeight - textBBox.bottom());
         text->mutldata()->moveX(0.5 * spatium);

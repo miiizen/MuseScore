@@ -55,7 +55,6 @@
 using namespace mu;
 using namespace mu::notation;
 using namespace mu::engraving;
-using namespace muse::actions;
 
 static constexpr int PIXELSSTEPSFACTOR = 5;
 
@@ -132,7 +131,8 @@ void NotationViewInputController::onNotationChanged()
         m_view->hideContextMenu();
         m_view->hideElementPopup();
 
-        if (AbstractElementPopupModel::hasElementEditPopup(selectedItem)) {
+        if (!(QApplication::mouseButtons() & Qt::RightButton)
+            && AbstractElementPopupModel::hasElementEditPopup(selectedItem)) {
             m_view->showElementPopup(type);
         }
     }, Asyncable::Mode::SetReplace /* FIXME */);
